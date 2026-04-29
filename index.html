@@ -2850,8 +2850,19 @@ function renderTasks(){
     const prioTag = '<span class="priority-tag '+prioKey+'">'+prio+'</span>';
     const histTxt = (t.historico&&t.historico.length>0)? '<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Última conclusão: '+formatDate(t.historico[t.historico.length-1].data)+'</div>' : "";
     const tagsHtml = (t.tags&&t.tags.length>0)? '<div style="margin-top:4px">'+t.tags.map(function(tg){return '<span class="tag-chip">🏷 '+esc(tg)+'</span>';}).join("")+'</div>' : "";
+    const cCount = (t.comentarios||[]).length;
+    const aCount = (t.anexos||[]).length;
+    const tTotal = t.tempoTotal||0;
+    let statsHtml = "";
+    if(cCount>0||aCount>0||tTotal>0){
+      statsHtml = '<div class="task-stats-line">';
+      if(cCount>0) statsHtml += '<span>💬 '+cCount+'</span>';
+      if(aCount>0) statsHtml += '<span>📎 '+aCount+'</span>';
+      if(tTotal>0) statsHtml += '<span>⏱️ '+formatDuration(tTotal)+'</span>';
+      statsHtml += '</div>';
+    }
     return '<tr>'+
-      '<td><div style="font-weight:700">'+esc(t.titulo)+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+histTxt+'</td>'+
+      '<td><div style="font-weight:700">'+esc(t.titulo)+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+statsHtml+histTxt+'</td>'+
       '<td><span class="area-tag">'+esc(t.area)+'</span><br><span style="font-size:13px">'+esc(t.setor)+'</span></td>'+
       (function(){
         const resps = getResponsaveis(t);
