@@ -3345,11 +3345,23 @@ function subscribeFirebase(){
   if(!_fbDb) return;
   _fbUnsubs.forEach(function(u){try{u();}catch(e){}});
   _fbUnsubs = [];
+  // Helper: only overwrite local if cloud has data OR if local is also empty
+  function safeSave(key, cloudArr, localLoader){
+    const localArr = localLoader();
+    if(cloudArr.length === 0 && localArr.length > 0){
+      // Cloud vazio mas local tem dados: empurra local para cloud, NÃO sobrescreve local
+      console.log("Cloud vazio em", key, "- empurrando dados locais");
+      return false;
+    }
+    saveLS(key, cloudArr);
+    return true;
+  }
   // Users
   _fbUnsubs.push(_fbDb.collection("users").onSnapshot(function(snap){
     if(_suppressSync) return;
     const arr = snap.docs.map(function(d){return d.data();});
-    saveLS(LS_USERS, arr);
+    const updated = safeSave(LS_USERS, arr, loadUsers);
+    if(!updated){ syncCollectionToFb("users", loadUsers()); return; }
     if(currentUser){
       const u = arr.find(function(x){return x.id===currentUser.id;});
       if(u){ currentUser = u; refreshTopbarAvatar(); }
@@ -3361,7 +3373,8 @@ function subscribeFirebase(){
   _fbUnsubs.push(_fbDb.collection("tasks").onSnapshot(function(snap){
     if(_suppressSync) return;
     const arr = snap.docs.map(function(d){return d.data();});
-    saveLS(LS_TASKS, arr);
+    const updated = safeSave(LS_TASKS, arr, loadTasks);
+    if(!updated){ syncCollectionToFb("tasks", loadTasks()); return; }
     if(currentUser){
       renderTasks();
       if(!document.getElementById("view-agenda").classList.contains("hidden")) renderAgenda();
@@ -3373,25 +3386,29 @@ function subscribeFirebase(){
   _fbUnsubs.push(_fbDb.collection("rotinas").onSnapshot(function(snap){
     if(_suppressSync) return;
     const arr = snap.docs.map(function(d){return d.data();});
-    saveLS(LS_ROTINAS, arr);
+    const updated = safeSave(LS_ROTINAS, arr, loadRotinas);
+    if(!updated){ syncCollectionToFb("rotinas", loadRotinas()); return; }
     if(currentUser) renderRotinas();
   }));
   _fbUnsubs.push(_fbDb.collection("processos").onSnapshot(function(snap){
     if(_suppressSync) return;
     const arr = snap.docs.map(function(d){return d.data();});
-    saveLS(LS_PROCESSOS, arr);
+    const updated = safeSave(LS_PROCESSOS, arr, loadProcessos);
+    if(!updated){ syncCollectionToFb("processos", loadProcessos()); return; }
     if(currentUser) renderProcessos();
   }));
   _fbUnsubs.push(_fbDb.collection("avisos").onSnapshot(function(snap){
     if(_suppressSync) return;
     const arr = snap.docs.map(function(d){return d.data();});
-    saveLS(LS_AVISOS, arr);
+    const updated = safeSave(LS_AVISOS, arr, loadAvisos);
+    if(!updated){ syncCollectionToFb("avisos", loadAvisos()); return; }
     if(currentUser){ renderAvisos(); }
   }));
   _fbUnsubs.push(_fbDb.collection("notas").onSnapshot(function(snap){
     if(_suppressSync) return;
     const arr = snap.docs.map(function(d){return d.data();});
-    saveLS(LS_NOTAS, arr);
+    const updated = safeSave(LS_NOTAS, arr, loadNotas);
+    if(!updated){ syncCollectionToFb("notas", loadNotas()); return; }
     if(currentUser){ renderNotas(); }
   }));
   // MVV (single doc)
