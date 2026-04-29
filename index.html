@@ -364,6 +364,12 @@ tbody tr:hover{background:#f8fafc}
 .timer-btn.stop{background:var(--red);color:#fff}
 .task-stats-line{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:6px}
 .task-stats-line span{display:inline-flex;align-items:center;gap:3px}
+.atraso-badge{display:inline-block;padding:2px 8px;font-size:11px;border-radius:4px;background:#fee2e2;color:#991b1b;font-weight:800;margin-left:6px;animation:pulse-atraso 2s ease-in-out infinite}
+@keyframes pulse-atraso{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.3)}50%{box-shadow:0 0 0 4px rgba(220,38,38,.1)}}
+.deadline-section{padding:12px 14px;background:#fef2f2;border-left:4px solid #dc2626;border-radius:6px;margin:10px 0;font-size:13px;color:#991b1b}
+.deadline-section.proximo{background:#fef3c7;border-left-color:#eab308;color:#92400e}
+.deadline-section.ok{background:#dcfce7;border-left-color:#16a34a;color:#166534}
+.deadline-section b{font-size:14px;display:block;margin-bottom:2px}
 .sustain-banner{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-left:4px solid #16a34a;border-radius:8px;padding:12px 16px;margin-top:18px;font-size:13px;color:#14532d;display:flex;align-items:center;gap:12px}
 .sustain-banner .sb-icon{font-size:24px}
 .sustain-banner .sb-counter{font-weight:800;color:#15803d;font-size:15px}
@@ -905,7 +911,7 @@ tbody tr:hover{background:#f8fafc}
       <div class="extras-tabs">
         <button type="button" class="extras-tab active" data-extra="coment" onclick="switchExtrasTab(event,'coment')">Comentarios (<span id="extras-count-c">0</span>)</button>
         <button type="button" class="extras-tab" data-extra="anex" onclick="switchExtrasTab(event,'anex')">Anexos (<span id="extras-count-a">0</span>)</button>
-        <button type="button" class="extras-tab" data-extra="timer" onclick="switchExtrasTab(event,'timer')">Tempo</button>
+        <button type="button" class="extras-tab" data-extra="timer" onclick="switchExtrasTab(event,'timer')">Status do Prazo</button>
       </div>
       <div id="extras-coment">
         <div class="coment-list" id="coment-list"></div>
@@ -920,15 +926,12 @@ tbody tr:hover{background:#f8fafc}
         <div class="anexos-list" id="anexos-list"></div>
       </div>
       <div id="extras-timer" class="hidden">
-        <div class="timer-area">
-          <div class="timer-display" id="timer-display">00:00:00</div>
-          <div class="timer-info">
-            <b>Tempo total acumulado</b>
-            <span id="timer-info-text">Clique em Iniciar para começar a cronometrar</span>
-          </div>
-          <button type="button" class="timer-btn start" id="timer-btn" onclick="toggleTimer()">Iniciar</button>
+        <div id="deadline-status"></div>
+        <div style="margin-top:10px;font-size:13px;color:var(--muted);line-height:1.6">
+          <strong>📌 Como funciona:</strong><br>
+          Esta seção mostra automaticamente quantos dias faltam (ou de atraso) baseado no prazo definido acima. <br>
+          Atualiza sozinho — você não precisa mexer em nada. Basta definir o prazo e o sistema calcula.
         </div>
-        <div id="timer-sessions" style="font-size:12px;color:var(--muted);max-height:120px;overflow-y:auto"></div>
       </div>
     </div>
     <div class="modal-actions">
@@ -2667,7 +2670,7 @@ function loadTaskExtras(t){
   _taskTempoTotal = t && t.tempoTotal? t.tempoTotal : 0;
   _taskSessoes = t && t.sessoesTempo? t.sessoesTempo.slice() : [];
   document.getElementById("task-extras").classList.toggle("hidden", !t);
-  if(t){renderComments(); renderAnexos(); updateTimerDisplay(); renderSessoes();}
+  if(t){renderComments(); renderAnexos(); updateDeadlineStatus(t);}
 }
 
 function renderComments(){
@@ -2726,6 +2729,34 @@ function viewImage(id){
   if(!a) return;
   document.getElementById("image-modal-img").src = a.dataUrl;
   document.getElementById("image-modal").classList.remove("hidden");
+}
+
+function updateDeadlineStatus(t){
+  const wrap = document.getElementById("deadline-status");
+  if(!wrap) return;
+  if(!t || !t.prazo){
+    wrap.innerHTML = '<div class="deadline-section ok"><b>Sem prazo definido</b>Defina um prazo na atividade para acompanhar.</div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const pd = parseLocalDate(t.prazo);
+  if(!pd){ wrap.innerHTML = '<div class="deadline-section ok"><b>Prazo inválido</b></div>'; return; }
+  pd.setHours(0,0,0,0);
+  const diff = Math.floor((pd.getTime()-today.getTime())/(1000*60*60*24));
+  if(t.status==="Concluída"){
+    wrap.innerHTML = '<div class="deadline-section ok"><b>✅ Atividade concluída</b>Prazo era '+formatDate(t.prazo)+(t.dataConclusao?'. Concluída em '+formatDate(t.dataConclusao):'')+'.</div>';
+    return;
+  }
+  if(diff < 0){
+    const dias = Math.abs(diff);
+    wrap.innerHTML = '<div class="deadline-section"><b>⚠️ Atrasada há '+dias+' dia'+(dias>1?"s":"")+'</b>Prazo era '+formatDate(t.prazo)+'. Hoje é '+formatDate(today.toISOString().slice(0,10))+'. <br><strong>Atualize o status assim que concluir!</strong></div>';
+  } else if(diff === 0){
+    wrap.innerHTML = '<div class="deadline-section proximo"><b>🟡 Vence HOJE</b>O prazo é hoje, '+formatDate(t.prazo)+'. Conclua até o final do dia para evitar atraso.</div>';
+  } else if(diff <= 3){
+    wrap.innerHTML = '<div class="deadline-section proximo"><b>⏰ Faltam '+diff+' dia'+(diff>1?"s":"")+'</b>Prazo: '+formatDate(t.prazo)+'. Está se aproximando!</div>';
+  } else {
+    wrap.innerHTML = '<div class="deadline-section ok"><b>✓ Faltam '+diff+' dias</b>Prazo: '+formatDate(t.prazo)+'. Tudo no controle.</div>';
+  }
 }
 
 function formatDuration(seconds){
@@ -3054,6 +3085,16 @@ function renderTasks(){
     const diasRest = prazoD? (prazoD.getTime()-today.getTime())/(1000*60*60*24) : 99;
     const isNear = prazoD && t.status!=="Concluída" && diasRest <= 2 && diasRest >= 0;
     const prazoTxt = t.prazo? formatDate(t.prazo) : "-";
+    let atrasoBadge = "";
+    if(t.prazo && t.status==="Atrasada"){
+      const td = new Date(); td.setHours(0,0,0,0);
+      const pd = parseLocalDate(t.prazo); 
+      if(pd){
+        pd.setHours(0,0,0,0);
+        const diasAtraso = Math.floor((td.getTime()-pd.getTime())/(1000*60*60*24));
+        if(diasAtraso>0) atrasoBadge = ' <span class="atraso-badge">⚠️ '+diasAtraso+' dia'+(diasAtraso>1?"s":"")+' atrasada</span>';
+      }
+    }
     const period = t.periodicidade||"Avulsa";
     const periodKey = period.toLowerCase().replace("í","i");
     const periodTag = period!=="Avulsa"? '<span class="period-tag '+periodKey+'">🔁 '+period+'</span>' : '<span class="period-tag avulsa">'+period+'</span>';
@@ -3073,7 +3114,7 @@ function renderTasks(){
           return '<span class="resp-chip">'+avChip+esc(n)+'</span>';}).join("")+'</div></td>';
       })()+
       '<td class="'+(isNear?"deadline-near":"")+'">'+prazoTxt+'</td>'+
-      '<td><span class="status-pill status-'+t.status.replace(/\s/g,'-')+'">'+t.status+'</span></td>'+
+      '<td><span class="status-pill status-'+t.status.replace(/\s/g,'-')+'">'+t.status+'</span>'+atrasoBadge+'</td>'+
       '<td><button class="btn btn-secondary btn-sm" onclick="editTask(\''+t.id+'\')">✏️</button>'+
       (canDelete(t)?'<button class="btn btn-danger btn-sm" onclick="deleteTask(\''+t.id+'\')">🗑️</button>':"")+'</td>'+
     '</tr>';
@@ -3288,14 +3329,12 @@ function nextPrazo(prazoStr, periodicidade){
 }
 
 function closeTaskModal(){
-  if(_timerInterval) stopTimerInternal();
   document.getElementById("task-modal").classList.add("hidden");
 }
 function saveTask(){
   const id = document.getElementById("task-id").value;
   const titulo = document.getElementById("task-titulo").value.trim();
   if(!titulo){ alert("Informe o título."); return; }
-  if(_timerInterval) stopTimerInternal();
   const data = {
     titulo,
     descricao: document.getElementById("task-descricao").value.trim(),
@@ -3308,9 +3347,7 @@ function saveTask(){
     prioridade: document.getElementById("task-prioridade").value,
     tags: _taskTags.slice(),
     comentarios: _taskComments.slice(),
-    anexos: _taskAnexos.slice(),
-    tempoTotal: _taskTempoTotal,
-    sessoesTempo: _taskSessoes.slice()
+    anexos: _taskAnexos.slice()
   };
   const tasks = loadTasks();
   const today = new Date().toISOString().slice(0,10);
