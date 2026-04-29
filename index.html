@@ -370,6 +370,34 @@ tbody tr:hover{background:#f8fafc}
 .deadline-section.proximo{background:#fef3c7;border-left-color:#eab308;color:#92400e}
 .deadline-section.ok{background:#dcfce7;border-left-color:#16a34a;color:#166534}
 .deadline-section b{font-size:14px;display:block;margin-bottom:2px}
+.manual-wrap{background:#fff;border-radius:10px;padding:30px;box-shadow:var(--shadow);max-width:900px;margin:0 auto}
+.manual-toc{background:#f8fafc;border-left:4px solid var(--blue);padding:18px 22px;border-radius:8px;margin-bottom:24px}
+.manual-toc h3{margin:0 0 12px;font-size:15px;color:var(--blue-dark);font-weight:800}
+.manual-toc ol{margin:0;padding-left:20px;font-size:13.5px}
+.manual-toc ol li{margin-bottom:4px}
+.manual-toc ol li a{color:var(--text);text-decoration:none}
+.manual-toc ol li a:hover{color:var(--blue);text-decoration:underline}
+.manual-section{margin-bottom:32px;padding-top:8px}
+.manual-section h2{color:var(--blue-dark);font-size:22px;font-weight:800;margin:0 0 12px;padding-bottom:8px;border-bottom:2px solid var(--blue)}
+.manual-section h3{color:var(--text);font-size:16px;font-weight:700;margin:18px 0 8px}
+.manual-section p{font-size:14px;line-height:1.6;color:var(--text);margin:8px 0}
+.manual-section ul,.manual-section ol{font-size:14px;line-height:1.7;color:var(--text);padding-left:24px}
+.manual-section ul li,.manual-section ol li{margin-bottom:4px}
+.manual-callout{padding:14px 18px;border-radius:8px;margin:14px 0;font-size:13.5px}
+.manual-callout.tip{background:#dbeafe;border-left:4px solid var(--blue)}
+.manual-callout.green{background:#dcfce7;border-left:4px solid var(--green)}
+.manual-callout.yellow{background:#fef3c7;border-left:4px solid var(--yellow)}
+.manual-callout.purple{background:#f3e8ff;border-left:4px solid #7c3aed}
+.manual-callout strong{display:block;margin-bottom:4px;font-size:14px}
+.manual-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.manual-table th{background:var(--blue);color:#fff;padding:8px 10px;text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+.manual-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.manual-table tr:nth-child(even) td{background:#f8fafc}
+.manual-table .ok{color:var(--green);font-weight:700}
+.manual-table .nok{color:var(--red);font-weight:700}
+.manual-hero{background:linear-gradient(135deg,var(--black),var(--blue-dark));color:#fff;padding:30px;border-radius:12px;margin-bottom:24px;text-align:center}
+.manual-hero h1{margin:0 0 8px;font-size:30px;font-weight:800;color:#fff}
+.manual-hero p{margin:0;color:#bdbdbd;font-size:14px}
 .sustain-banner{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-left:4px solid #16a34a;border-radius:8px;padding:12px 16px;margin-top:18px;font-size:13px;color:#14532d;display:flex;align-items:center;gap:12px}
 .sustain-banner .sb-icon{font-size:24px}
 .sustain-banner .sb-counter{font-weight:800;color:#15803d;font-size:15px}
@@ -599,6 +627,7 @@ tbody tr:hover{background:#f8fafc}
   <div class="container">
     <div class="tabs">
       <button class="tab active" data-tab="apresentacao" onclick="switchTab('apresentacao')">🏠 Apresentação</button>
+      <button id="tab-manual" class="tab" data-tab="manual" onclick="switchTab('manual')">📖 Manual</button>
       <button id="tab-atividades" class="tab" data-tab="atividades" onclick="switchTab('atividades')">📋 Atividades</button>
       <button id="tab-processos" class="tab" data-tab="processos" onclick="switchTab('processos')">📚 Processos</button>
       <button id="tab-anotacoes" class="tab" data-tab="anotacoes" onclick="switchTab('anotacoes')">📝 Anotações</button>
@@ -644,6 +673,322 @@ tbody tr:hover{background:#f8fafc}
           <div class="guide-step"><div class="num">5</div><h4>Rotinas para o CFO</h4><p>A gerência cadastra entregas estratégicas em "Rotinas Gerenciais".</p></div>
           <div class="guide-step"><div class="num">6</div><h4>Exporte relatórios</h4><p>Use "Exportar CSV" para gerar relatórios das atividades.</p></div>
         </div>
+      </div>
+    </div>
+
+    <div id="view-manual" class="hidden">
+      <div class="manual-wrap">
+        <div class="manual-hero">
+          <h1>📖 Manual do Sistema</h1>
+          <p>Guia completo passo a passo · Just Travel</p>
+        </div>
+
+        <div class="manual-toc">
+          <h3>📋 Sumário</h3>
+          <ol>
+            <li><a href="#m1">Bem-vindo ao sistema</a></li>
+            <li><a href="#m2">Como acessar</a></li>
+            <li><a href="#m3">Conhecendo a tela inicial</a></li>
+            <li><a href="#m4">Atividades — o coração do sistema</a></li>
+            <li><a href="#m5">Comentários, anexos e prazo</a></li>
+            <li><a href="#m6">Agenda e calendário</a></li>
+            <li><a href="#m7">Processos da equipe</a></li>
+            <li><a href="#m8">Anotações pessoais</a></li>
+            <li><a href="#m9">Organograma</a></li>
+            <li><a href="#m10">Avisos da equipe</a></li>
+            <li><a href="#m11">Para a gerência: Rotinas Gerenciais</a></li>
+            <li><a href="#m12">Para a administração</a></li>
+            <li><a href="#m13">Permissões por função</a></li>
+            <li><a href="#m14">Dicas e perguntas frequentes</a></li>
+          </ol>
+        </div>
+
+        <div id="m1" class="manual-section">
+          <h2>1. Bem-vindo ao sistema</h2>
+          <p>Este é o sistema oficial de gestão de equipe da Just Travel. Aqui você organiza atividades, acompanha prazos, comenta com colegas, anexa comprovantes e visualiza tudo em tempo real, em qualquer dispositivo.</p>
+          <h3>O que você pode fazer:</h3>
+          <ul>
+            <li>Cadastrar e acompanhar atividades do seu setor</li>
+            <li>Receber alertas automáticos de prazos próximos e atrasos</li>
+            <li>Comentar e anexar imagens em cada atividade</li>
+            <li>Consultar o calendário com feriados de Salvador-BA</li>
+            <li>Acessar processos documentados e usar o bloco de anotações</li>
+            <li>Visualizar o organograma e os avisos importantes</li>
+          </ul>
+          <div class="manual-callout green"><strong>🌱 Sustentabilidade</strong>Este sistema substitui agendas de papel, post-its e cadernos. Cada anotação digital evita uma folha de papel — um pequeno gesto que faz diferença.</div>
+        </div>
+
+        <div id="m2" class="manual-section">
+          <h2>2. Como acessar</h2>
+          <h3>Onde acessar</h3>
+          <p>Disponível 24h em qualquer dispositivo (computador, celular ou tablet) com internet. Use Chrome ou Edge:</p>
+          <p style="text-align:center;font-weight:700;font-size:16px;color:var(--blue)">https://lorenasouza-lab.github.io/equipe/</p>
+          <h3>Como fazer login</h3>
+          <p>O sistema usa o login Google da Just Travel. Sem senhas para decorar — usa o mesmo e-mail @justtraveltour.com que você já tem.</p>
+          <ol>
+            <li>Abra a URL no navegador</li>
+            <li>Clique no botão branco "Entrar com Google"</li>
+            <li>Selecione seu e-mail @justtraveltour.com no popup</li>
+            <li>Pronto! Cai direto no painel da sua função</li>
+          </ol>
+          <div class="manual-callout tip"><strong>🔒 Segurança</strong>Apenas funcionários com e-mail @justtraveltour.com cadastrados conseguem acessar. O sistema bloqueia automaticamente outros e-mails.</div>
+        </div>
+
+        <div id="m3" class="manual-section">
+          <h2>3. Conhecendo a tela inicial</h2>
+          <p>Ao entrar no sistema você verá no topo um menu com várias abas. Cada uma tem uma função específica:</p>
+          <table class="manual-table">
+            <thead><tr><th>Aba</th><th>Para que serve</th></tr></thead>
+            <tbody>
+              <tr><td><strong>🏠 Apresentação</strong></td><td>Boas-vindas, avisos da equipe, missão/visão/valores e resumo de atividades.</td></tr>
+              <tr><td><strong>📖 Manual</strong></td><td>Este guia que você está lendo agora.</td></tr>
+              <tr><td><strong>📋 Atividades</strong></td><td>Lista todas suas atividades. Aqui você cria, edita, conclui e acompanha.</td></tr>
+              <tr><td><strong>📚 Processos</strong></td><td>Repositório de fluxos, procedimentos e instruções da equipe.</td></tr>
+              <tr><td><strong>📝 Anotações</strong></td><td>Bloco de anotações digital pessoal. Pode compartilhar com setor ou área.</td></tr>
+              <tr><td><strong>📅 Agenda</strong></td><td>Calendário do mês com feriados nacionais, Bahia e Salvador.</td></tr>
+              <tr><td><strong>👥 Organograma</strong></td><td>Estrutura visual da equipe — gerente, coordenadores, funcionários.</td></tr>
+              <tr><td><strong>📊 Dashboard</strong></td><td>Gráficos e indicadores (apenas coordenadores e gerência).</td></tr>
+              <tr><td><strong>📈 Rotinas Gerenciais</strong></td><td>Entregas estratégicas (apenas gerência e CFO).</td></tr>
+              <tr><td><strong>⚙️ Administração</strong></td><td>Cadastro de funcionários e configurações (apenas administradores).</td></tr>
+            </tbody>
+          </table>
+          <p>No canto superior direito você sempre vê: sua foto e nome (clicável para editar perfil), indicador <strong>☁ Online</strong> verde (sincronização ativa), botão 🏠 Início (volta à página de seleção) e botão Sair.</p>
+        </div>
+
+        <div id="m4" class="manual-section">
+          <h2>4. Atividades — o coração do sistema</h2>
+          <h3>Criando uma atividade nova</h3>
+          <ol>
+            <li>Vai na aba <strong>📋 Atividades</strong></li>
+            <li>Clica no botão azul <strong>"+ Nova atividade"</strong> no canto direito</li>
+            <li>Preenche o formulário</li>
+          </ol>
+          <p><strong>Campos obrigatórios:</strong></p>
+          <ul>
+            <li><strong>Título</strong> — nome curto. Ex: "Conciliar extrato BB de abril"</li>
+            <li><strong>Área</strong> — Equipe Financeira ou Equipe de Gente & Gestão</li>
+            <li><strong>Setor</strong> — específico dentro da área</li>
+            <li><strong>Status</strong> — Não iniciada / Em progresso / Atrasada / Concluída</li>
+          </ul>
+          <p><strong>Campos importantes:</strong></p>
+          <ul>
+            <li><strong>Descrição</strong> — detalhe o que precisa ser feito</li>
+            <li><strong>Responsáveis</strong> — marque um ou mais funcionários (uma atividade pode ser de várias pessoas!)</li>
+            <li><strong>Prazo</strong> — data limite. Após o prazo, fica "Atrasada" automaticamente</li>
+            <li><strong>Periodicidade</strong> — Avulsa, Diária, Semanal, Mensal etc. Recorrentes voltam sozinhas após concluídas!</li>
+            <li><strong>Prioridade</strong> — Baixa (azul) / Média (verde) / Importante (laranja) / Urgente (vermelho)</li>
+            <li><strong>Tags</strong> — agrupa atividades de um mesmo lançamento (ex: "Lançamento Tour Verão 2026")</li>
+          </ul>
+          <h3>Acompanhando atividades</h3>
+          <p>Na lista, cada atividade mostra: título com tags coloridas de prioridade e periodicidade; responsáveis com avatar; prazo (em vermelho se faltar 2 dias ou menos); status com etiqueta colorida; se atrasada, indicador <strong>"⚠️ X dias atrasada"</strong> pulsante; estatísticas: 💬 comentários · 📎 anexos.</p>
+          <h3>Filtros úteis</h3>
+          <p>No topo da lista você pode filtrar por área, setor, status, prioridade, tag ou texto livre.</p>
+          <h3>Periodicidade — atividades que se repetem</h3>
+          <p>Marcar uma atividade como Diária/Semanal/Mensal etc faz com que ela apareça no calendário em todas as datas previstas; quando concluída, registra a conclusão de hoje no histórico; avança automaticamente o prazo para a próxima ocorrência; volta ao status "Não iniciada" para o próximo dia/semana/mês.</p>
+          <div class="manual-callout tip"><strong>💡 Exemplo prático</strong>Bianca cria a atividade "Conferir extratos diários" como Diária. Toda manhã ela vê pendente. Ao concluir, o sistema registra a data e já reativa para o dia seguinte. Sem precisar criar de novo.</div>
+        </div>
+
+        <div id="m5" class="manual-section">
+          <h2>5. Comentários, anexos e status do prazo</h2>
+          <p>Ao editar uma atividade existente (ícone ✏️), você verá no fim do formulário 3 abas extras:</p>
+          <h3>💬 Comentários</h3>
+          <p>Cada atividade vira um mini-chat entre os envolvidos. Use para tirar dúvidas, avisar a equipe e documentar decisões.</p>
+          <ol>
+            <li>Digite no campo de texto</li>
+            <li>Clique em "Comentar"</li>
+            <li>Aparece imediatamente para todos com acesso, com seu nome e horário</li>
+          </ol>
+          <h3>📎 Anexos (imagens)</h3>
+          <p>Anexe prints, fotos e comprovantes na atividade. Útil para print de extrato bancário, foto de comprovante, imagem de tela de erro, foto de documento.</p>
+          <ol>
+            <li>Aba Anexos → "Clique para enviar uma imagem"</li>
+            <li>Selecione JPG, PNG ou WebP</li>
+            <li>Aparece como miniatura. Clique para ver tamanho cheio</li>
+            <li>Para remover, clique no × vermelho</li>
+          </ol>
+          <h3>⏰ Status do Prazo (automático)</h3>
+          <table class="manual-table">
+            <thead><tr><th>Indicador</th><th>Significado</th></tr></thead>
+            <tbody>
+              <tr><td><strong>🟢 Faltam X dias</strong></td><td>Tudo no controle, prazo longe</td></tr>
+              <tr><td><strong>🟡 Faltam 1-3 dias</strong></td><td>Atenção: prazo se aproximando</td></tr>
+              <tr><td><strong>🟡 Vence HOJE</strong></td><td>É o último dia</td></tr>
+              <tr><td><strong>🔴 Atrasada há X dias</strong></td><td>Prazo passou e não foi concluída</td></tr>
+              <tr><td><strong>🟢 Atividade concluída</strong></td><td>Mostra a data de conclusão</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="m6" class="manual-section">
+          <h2>6. Agenda e calendário</h2>
+          <p>A aba <strong>📅 Agenda</strong> mostra um calendário do mês com tudo o que está acontecendo. Atividades aparecem nos prazos, e o sistema integra automaticamente:</p>
+          <h3>Feriados e datas</h3>
+          <ul>
+            <li>Feriados nacionais (Carnaval, Páscoa, Tiradentes, etc.)</li>
+            <li>Feriado estadual da Bahia (2 de Julho)</li>
+            <li>Feriados de Salvador (Nossa Senhora da Conceição em 8/12)</li>
+            <li>Pontos facultativos (São João, Iemanjá, Lavagem do Bonfim)</li>
+          </ul>
+          <h3>Cores no calendário</h3>
+          <ul>
+            <li><strong>🔴 Vermelho claro</strong> — feriado nacional/estadual</li>
+            <li><strong>🟡 Amarelo claro</strong> — feriado municipal</li>
+            <li><strong>🔵 Azul claro</strong> — ponto facultativo</li>
+            <li>Borda destacada — dia atual (HOJE)</li>
+          </ul>
+          <p>Use os botões "‹ Anterior" e "Próximo ›" para navegar, ou "Hoje" para voltar ao mês corrente.</p>
+        </div>
+
+        <div id="m7" class="manual-section">
+          <h2>7. Processos da equipe</h2>
+          <p>A aba <strong>📚 Processos</strong> é o repositório de documentação. Aqui você consulta como fazer cada coisa: fluxos, procedimentos, regras.</p>
+          <h3>Quem vê o quê</h3>
+          <ul>
+            <li><strong>Funcionário</strong>: vê só processos do próprio setor</li>
+            <li><strong>Coordenador</strong>: vê toda a área</li>
+            <li><strong>Gerente</strong>: vê tudo</li>
+          </ul>
+          <h3>Como criar um processo</h3>
+          <ol>
+            <li>Aba 📚 Processos → "+ Novo processo"</li>
+            <li>Título (ex: "Fluxo de fechamento mensal")</li>
+            <li>Descrição curta (objetivo em 1 linha)</li>
+            <li>Conteúdo: passo a passo completo</li>
+            <li>Define área e setor</li>
+            <li>Salvar</li>
+          </ol>
+          <div class="manual-callout purple"><strong>📝 Boa prática</strong>Use Processos para documentar tudo que se repete e que outras pessoas precisam saber. Quando alguém novo entrar, vai conseguir aprender lendo os processos.</div>
+        </div>
+
+        <div id="m8" class="manual-section">
+          <h2>8. Anotações pessoais</h2>
+          <p>A aba <strong>📝 Anotações</strong> é seu bloco de notas digital — substitui caderno, post-it, papel solto. Tem visual de papel pautado para parecer com anotação à mão.</p>
+          <h3>Tipos de anotação</h3>
+          <ul>
+            <li><strong>🔒 Privada</strong> — só você vê</li>
+            <li><strong>👥 Setor</strong> — todos do seu setor podem ver</li>
+            <li><strong>🏢 Área</strong> — toda a sua área pode ver</li>
+          </ul>
+          <h3>Como usar</h3>
+          <ol>
+            <li>Aba 📝 Anotações → "+ Nova anotação"</li>
+            <li>Define título (ex: "Lembretes da semana")</li>
+            <li>Escreve livremente no campo de conteúdo</li>
+            <li>Escolhe se é privada ou compartilhada</li>
+            <li>Salvar</li>
+          </ol>
+        </div>
+
+        <div id="m9" class="manual-section">
+          <h2>9. Organograma</h2>
+          <p>A aba <strong>👥 Organograma</strong> mostra a estrutura visual da Just Travel. Útil para entender hierarquia, ver responsáveis por setor, conhecer colegas.</p>
+          <ul>
+            <li>CFO no topo</li>
+            <li>Gerente abaixo</li>
+            <li>Áreas com seus coordenadores</li>
+            <li>Setores com seus funcionários</li>
+          </ul>
+          <p>Cada pessoa aparece como cartão com foto (ou iniciais), nome, cargo e setor. É só visual — edições são feitas pela aba ⚙️ Administração (apenas gerência).</p>
+        </div>
+
+        <div id="m10" class="manual-section">
+          <h2>10. Avisos da equipe</h2>
+          <p>Na aba <strong>🏠 Apresentação</strong>, no topo da página, fica a seção de avisos. Use para comunicações importantes.</p>
+          <h3>Tipos de aviso</h3>
+          <ul>
+            <li><strong>🚨 Urgente</strong> — caixa vermelha pulsante</li>
+            <li><strong>⚠️ Aviso</strong> — caixa amarela</li>
+            <li><strong>📘 Informação</strong> — caixa azul</li>
+            <li><strong>✅ Sucesso</strong> — caixa verde</li>
+          </ul>
+          <h3>Quem pode publicar</h3>
+          <ul>
+            <li><strong>Gerente</strong> — qualquer escopo (toda empresa, área, setor)</li>
+            <li><strong>Coordenador admin de área</strong> — apenas para a própria área</li>
+          </ul>
+        </div>
+
+        <div id="m11" class="manual-section">
+          <h2>11. Para a gerência: Rotinas Gerenciais</h2>
+          <p>A aba <strong>📈 Rotinas Gerenciais</strong> é exclusiva para gerência e CFO. Aqui ficam as entregas estratégicas que a gerência apresenta ao CFO.</p>
+          <h3>Fluxo das rotinas</h3>
+          <ul>
+            <li>Gerente cria a rotina (título, descrição, periodicidade, prazo)</li>
+            <li>Status inicial: <strong>Pendente</strong></li>
+            <li>Gerente clica "▶️ Iniciar" → vai para <strong>Em andamento</strong></li>
+            <li>Quando termina: "📨 Marcar como entregue" → <strong>Entregue</strong></li>
+            <li>CFO recebe alerta laranja: "📌 N entregas aguardando avaliação"</li>
+            <li>CFO clica "📋 Avaliar" → escreve comentário → ✓ Aprovar ou ✗ Reprovar</li>
+            <li>Se reprovado: gerente vê alerta amarelo e clica "↻ Refazer" para voltar a <strong>Em andamento</strong></li>
+          </ul>
+          <p><strong>Periodicidades:</strong> Semanal, Quinzenal, Mensal, Trimestral, Semestral, Anual ou Avulsa.</p>
+        </div>
+
+        <div id="m12" class="manual-section">
+          <h2>12. Para a administração</h2>
+          <p>A aba <strong>⚙️ Administração</strong> é onde a gerência cadastra funcionários e define funções. Apenas gerentes têm acesso completo. Coordenadores com flag "admin de área" (como Emanuel) veem apenas a própria área.</p>
+          <h3>Cadastrar uma pessoa</h3>
+          <ol>
+            <li>Aba ⚙️ Administração → "+ Adicionar pessoa"</li>
+            <li>Foto (opcional)</li>
+            <li>Nome completo</li>
+            <li>Cargo (texto livre)</li>
+            <li>Função: Gerente, CFO, Coordenador ou Funcionário</li>
+            <li>Área e setor (se aplicável)</li>
+            <li><strong>E-mail @justtraveltour.com</strong> (CRÍTICO para login Google!)</li>
+            <li>Salvar</li>
+          </ol>
+          <h3>Conceder acesso administrativo a coordenador</h3>
+          <p>Ao escolher função "Coordenador", aparece checkbox amarelo "Acesso administrativo da área". Marcando, o coordenador ganha acesso à aba ⚙️ mas restrito à própria área.</p>
+        </div>
+
+        <div id="m13" class="manual-section">
+          <h2>13. Permissões por função</h2>
+          <table class="manual-table" style="font-size:11.5px">
+            <thead><tr><th>Recurso</th><th>Funcionário</th><th>Coordenador</th><th>Coord. Admin</th><th>Gerente</th><th>CFO</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Atividades</strong></td><td class="ok">setor</td><td class="ok">área</td><td class="ok">área</td><td class="ok">tudo</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Comentários/Anexos</strong></td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Dashboard</strong></td><td class="nok">✗</td><td class="ok">área</td><td class="ok">área</td><td class="ok">tudo</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Processos</strong></td><td class="ok">setor</td><td class="ok">área</td><td class="ok">área</td><td class="ok">tudo</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Anotações privadas</strong></td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Calendário</strong></td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Organograma</strong></td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+              <tr><td><strong>Manual</strong></td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+              <tr><td><strong>Avisos (criar)</strong></td><td class="nok">✗</td><td class="nok">✗</td><td class="ok">área</td><td class="ok">tudo</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Cadastrar pessoas</strong></td><td class="nok">✗</td><td class="nok">✗</td><td class="ok">área</td><td class="ok">tudo</td><td class="nok">✗</td></tr>
+              <tr><td><strong>Rotinas gerenciais</strong></td><td class="nok">✗</td><td class="nok">✗</td><td class="nok">✗</td><td class="ok">criar</td><td class="ok">avaliar</td></tr>
+              <tr><td><strong>Editar M.V.V.</strong></td><td class="nok">✗</td><td class="nok">✗</td><td class="nok">✗</td><td class="ok">✓</td><td class="nok">✗</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="m14" class="manual-section">
+          <h2>14. Dicas e perguntas frequentes</h2>
+          <h3>Posso usar pelo celular?</h3>
+          <p>Sim! Funciona em qualquer navegador moderno (Chrome, Safari, Firefox, Edge).</p>
+          <h3>E se eu não tiver internet?</h3>
+          <p>O sistema mantém cópia local do que você já viu. Funciona offline para visualização. Quando a internet voltar, sincroniza automaticamente.</p>
+          <h3>Esqueci minha senha. E agora?</h3>
+          <p>Como o sistema usa Google login, você não tem senha! Se não conseguir entrar com seu e-mail @justtraveltour.com, peça à gerência para verificar seu cadastro.</p>
+          <h3>Posso comentar em atividade que não é minha?</h3>
+          <p>Sim, desde que você tenha acesso a ela.</p>
+          <h3>Como crio uma atividade que se repete toda semana?</h3>
+          <p>No campo "Periodicidade" escolha "Semanal". Quando concluir, ela registra a conclusão e já volta como Não Iniciada para a próxima semana, com prazo avançado em 7 dias.</p>
+          <h3>Como vincular várias atividades ao mesmo lançamento?</h3>
+          <p>Use Tags! No campo "Tags / Lançamento", digite o nome (ex: "Lançamento Tour Verão 2026") e pressione Enter. Em outras atividades, repita a mesma tag (sugestões aparecem). Use o filtro "Tag" para ver todas juntas.</p>
+          <h3>Atividade ficou "Atrasada" mas eu já entreguei. O que faço?</h3>
+          <p>Edite a atividade e mude o status para "Concluída". O sistema registra a data e remove o alerta.</p>
+          <h3>Posso anexar PDFs?</h3>
+          <p>Por enquanto o sistema aceita apenas imagens (JPG, PNG, WebP). Para PDFs, converta a página em imagem (print) ou guarde em outro lugar (Drive) e referencie no comentário.</p>
+          <h3>E se eu sair da empresa?</h3>
+          <p>A gerência removerá seu cadastro. A partir desse momento, o sistema bloqueia automaticamente seu acesso.</p>
+          <h3>Suporte</h3>
+          <p>Em caso de dúvida, fale com a Lorena Souza (Gerente Geral) ou pelo WhatsApp da equipe.</p>
+        </div>
+
+        <p style="text-align:center;color:var(--muted);font-style:italic;margin-top:30px;font-size:13px">Conectando pessoas, sonhos &amp; destinos.</p>
+        <p style="text-align:center;color:var(--muted);font-size:11px">Just Travel · Manual v1.0 · 2026</p>
       </div>
     </div>
 
@@ -1528,7 +1873,7 @@ function switchTab(tab){
   document.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
   const btn = document.querySelector('.tab[data-tab="'+tab+'"]');
   if(btn) btn.classList.add("active");
-  ["apresentacao","atividades","agenda","processos","anotacoes","organograma","dashboard","rotinas","admin"].forEach(function(t){
+  ["apresentacao","manual","atividades","agenda","processos","anotacoes","organograma","dashboard","rotinas","admin"].forEach(function(t){
     const v = document.getElementById("view-"+t);
     if(v) v.classList.toggle("hidden", t!==tab);
   });
