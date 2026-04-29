@@ -3292,9 +3292,17 @@ async function initFirebase(){
     }
     _fbDb = firebase.firestore();
     _fbAuth = firebase.auth();
-    await _fbAuth.signInAnonymously();
+    // Marca como conectado mesmo sem auth - operações exigirão Google login
     _fbConnected = true;
-    subscribeFirebase();
+    // Listener de auth: quando usuário loga via Google, ativa sync
+    _fbAuth.onAuthStateChanged(function(user){
+      if(user && user.email && user.email.toLowerCase().endsWith("@justtraveltour.com")){
+        // Auth válida - subscreve aos collections e faz sync inicial se necessário
+        subscribeFirebase();
+        // Se tem dados locais e a nuvem está vazia, faz upload inicial
+        syncLocalToCloudIfNeeded();
+      }
+    });
     updateCloudStatus();
     return true;
   } catch(e){
@@ -3302,6 +3310,34 @@ async function initFirebase(){
     _fbConnected = false;
     updateCloudStatus();
     return false;
+  }
+}
+
+async function syncLocalToCloudIfNeeded(){
+  if(!_fbDb || !_fbConnected) return;
+  try {
+    const usersSnap = await _fbDb.collection("users").get();
+    if(usersSnap.empty){
+      // Nuvem vazia, faz upload dos dados locais
+      const localUsers = loadUsers();
+      const localTasks = loadTasks();
+      const localRotinas = loadRotinas();
+      const localProcessos = loadProcessos();
+      const localAvisos = loadAvisos();
+      const localNotas = loadNotas();
+      if(localUsers.length>0){
+        await syncCollectionToFb("users", localUsers);
+        await syncCollectionToFb("tasks", localTasks);
+        await syncCollectionToFb("rotinas", localRotinas);
+        await syncCollectionToFb("processos", localProcessos);
+        await syncCollectionToFb("avisos", localAvisos);
+        await syncCollectionToFb("notas", localNotas);
+        await syncMVVToFb(loadMVV());
+        console.log("✓ Dados locais sincronizados com a nuvem");
+      }
+    }
+  } catch(e){
+    console.warn("Sync inicial:", e.message);
   }
 }
 
