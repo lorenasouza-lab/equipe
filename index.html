@@ -328,6 +328,42 @@ tbody tr:hover{background:#f8fafc}
 .scope-badge.privada{background:#fef3c7;color:#92400e}
 .scope-badge.setor{background:#dbeafe;color:#1e40af}
 .scope-badge.area{background:#e0e7ff;color:#3730a3}
+.task-extras{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+.extras-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.extras-tab{padding:8px 14px;background:transparent;border:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.extras-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.coment-list{max-height:240px;overflow-y:auto;padding:4px 0}
+.coment-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.coment-item:last-child{border-bottom:none}
+.coment-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.coment-body{flex:1}
+.coment-head{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:3px}
+.coment-autor{font-weight:700;color:var(--text);font-size:12.5px}
+.coment-text{font-size:13.5px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+.coment-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;font-style:italic}
+.coment-input-area{margin-top:10px;display:flex;gap:8px}
+.coment-input-area textarea{flex:1;min-height:50px;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13.5px;resize:vertical}
+.coment-input-area button{align-self:flex-end}
+.anexos-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:8px}
+.anexo-card{position:relative;aspect-ratio:1;background:#f1f5f9;border-radius:8px;overflow:hidden;cursor:pointer;border:1px solid var(--border)}
+.anexo-card img{width:100%;height:100%;object-fit:cover}
+.anexo-card .anexo-name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.anexo-card .anexo-remove{position:absolute;top:4px;right:4px;background:#dc2626;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;font-weight:700;border:none}
+.anexo-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;font-style:italic}
+.anexo-upload-btn{padding:10px 16px;background:#fff;border:2px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:13px;color:var(--muted);font-weight:600;display:block;width:100%}
+.anexo-upload-btn:hover{border-color:var(--blue);color:var(--blue);background:#f0f9ff}
+.image-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:300;cursor:pointer}
+.image-modal img{max-width:90vw;max-height:90vh;object-fit:contain}
+.timer-area{display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border-radius:8px;margin-bottom:12px;flex-wrap:wrap}
+.timer-display{font-family:Menlo,monospace;font-size:22px;font-weight:800;color:var(--text);min-width:90px}
+.timer-display.running{color:#16a34a}
+.timer-info{flex:1;font-size:12.5px;color:var(--muted);min-width:180px}
+.timer-info b{color:var(--text);display:block;font-size:13.5px}
+.timer-btn{padding:8px 18px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+.timer-btn.start{background:var(--green);color:#fff}
+.timer-btn.stop{background:var(--red);color:#fff}
+.task-stats-line{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:6px}
+.task-stats-line span{display:inline-flex;align-items:center;gap:3px}
 .sustain-banner{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-left:4px solid #16a34a;border-radius:8px;padding:12px 16px;margin-top:18px;font-size:13px;color:#14532d;display:flex;align-items:center;gap:12px}
 .sustain-banner .sb-icon{font-size:24px}
 .sustain-banner .sb-counter{font-weight:800;color:#15803d;font-size:15px}
@@ -865,11 +901,45 @@ tbody tr:hover{background:#f8fafc}
       <div class="tag-suggest" id="task-tag-suggest"></div>
     </div>
     <div id="task-historico-wrap" class="alert alert-info hidden" style="font-size:12px"></div>
+    <div id="task-extras" class="task-extras hidden">
+      <div class="extras-tabs">
+        <button type="button" class="extras-tab active" data-extra="coment" onclick="switchExtrasTab(event,'coment')">Comentarios (<span id="extras-count-c">0</span>)</button>
+        <button type="button" class="extras-tab" data-extra="anex" onclick="switchExtrasTab(event,'anex')">Anexos (<span id="extras-count-a">0</span>)</button>
+        <button type="button" class="extras-tab" data-extra="timer" onclick="switchExtrasTab(event,'timer')">Tempo</button>
+      </div>
+      <div id="extras-coment">
+        <div class="coment-list" id="coment-list"></div>
+        <div class="coment-input-area">
+          <textarea id="coment-input" placeholder="Escreva um comentário..."></textarea>
+          <button type="button" class="btn btn-primary btn-sm" onclick="addComment()">Comentar</button>
+        </div>
+      </div>
+      <div id="extras-anex" class="hidden">
+        <input type="file" id="anex-input" accept="image/*" style="display:none" onchange="handleAnexUpload(this)">
+        <button type="button" class="anexo-upload-btn" onclick="document.getElementById('anex-input').click()">Clique para enviar uma imagem</button>
+        <div class="anexos-list" id="anexos-list"></div>
+      </div>
+      <div id="extras-timer" class="hidden">
+        <div class="timer-area">
+          <div class="timer-display" id="timer-display">00:00:00</div>
+          <div class="timer-info">
+            <b>Tempo total acumulado</b>
+            <span id="timer-info-text">Clique em Iniciar para começar a cronometrar</span>
+          </div>
+          <button type="button" class="timer-btn start" id="timer-btn" onclick="toggleTimer()">Iniciar</button>
+        </div>
+        <div id="timer-sessions" style="font-size:12px;color:var(--muted);max-height:120px;overflow-y:auto"></div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeTaskModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveTask()">Salvar</button>
     </div>
   </div>
+</div>
+
+<div id="image-modal" class="image-modal hidden" onclick="this.classList.add('hidden')">
+  <img id="image-modal-img" src="">
 </div>
 
 <div id="nota-modal" class="modal-overlay hidden">
@@ -2574,6 +2644,148 @@ function deleteNota(){
   renderNotas();
 }
 
+/* ====================== MELHORIAS ====================== */
+let _taskComments = [];
+let _taskAnexos = [];
+let _taskTempoTotal = 0;
+let _taskSessoes = [];
+let _timerInterval = null;
+let _timerStart = null;
+
+function switchExtrasTab(ev, tab){
+  document.querySelectorAll(".extras-tab").forEach(function(t){t.classList.remove("active");});
+  ev.target.classList.add("active");
+  document.getElementById("extras-coment").classList.toggle("hidden", tab!=="coment");
+  document.getElementById("extras-anex").classList.toggle("hidden", tab!=="anex");
+  document.getElementById("extras-timer").classList.toggle("hidden", tab!=="timer");
+}
+
+function loadTaskExtras(t){
+  if(_timerInterval) stopTimerInternal();
+  _taskComments = t && t.comentarios? t.comentarios.slice() : [];
+  _taskAnexos = t && t.anexos? t.anexos.slice() : [];
+  _taskTempoTotal = t && t.tempoTotal? t.tempoTotal : 0;
+  _taskSessoes = t && t.sessoesTempo? t.sessoesTempo.slice() : [];
+  document.getElementById("task-extras").classList.toggle("hidden", !t);
+  if(t){renderComments(); renderAnexos(); updateTimerDisplay(); renderSessoes();}
+}
+
+function renderComments(){
+  const list = document.getElementById("coment-list");
+  if(!list) return;
+  document.getElementById("extras-count-c").textContent = _taskComments.length;
+  if(_taskComments.length===0){
+    list.innerHTML = '<div class="coment-empty">Nenhum comentário ainda. Use o campo abaixo.</div>';
+    return;
+  }
+  list.innerHTML = _taskComments.map(function(c){
+    return '<div class="coment-item"><div class="coment-avatar">'+esc(initials(c.autor||""))+'</div><div class="coment-body"><div class="coment-head"><span class="coment-autor">'+esc(c.autor||"-")+'</span><span>'+formatDateTime(c.data)+'</span></div><div class="coment-text">'+esc(c.texto)+'</div></div></div>';
+  }).join("");
+}
+
+function addComment(){
+  const txt = document.getElementById("coment-input").value.trim();
+  if(!txt) return;
+  _taskComments.push({id: crypto.randomUUID(), autor: currentUser.nome, autorId: currentUser.id, data: new Date().toISOString(), texto: txt});
+  document.getElementById("coment-input").value = "";
+  renderComments();
+}
+
+function renderAnexos(){
+  const list = document.getElementById("anexos-list");
+  if(!list) return;
+  document.getElementById("extras-count-a").textContent = _taskAnexos.length;
+  if(_taskAnexos.length===0){
+    list.innerHTML = '<div class="anexo-empty" style="grid-column:1/-1">Nenhum anexo. Clique acima para enviar.</div>';
+    return;
+  }
+  list.innerHTML = _taskAnexos.map(function(a){
+    return '<div class="anexo-card" onclick="viewImage(\''+a.id+'\')"><img src="'+a.dataUrl+'" alt="'+esc(a.nome||"")+'"><div class="anexo-name">'+esc(a.nome||"imagem")+'</div><button class="anexo-remove" onclick="event.stopPropagation();removeAnex(\''+a.id+'\')">×</button></div>';
+  }).join("");
+}
+
+function handleAnexUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 10*1024*1024){alert("Imagem muito grande (max 10MB).");return;}
+  readImageFile(file, 800, function(dataUrl){
+    _taskAnexos.push({id: crypto.randomUUID(), nome: file.name, dataUrl: dataUrl, data: new Date().toISOString(), autor: currentUser.nome});
+    renderAnexos();
+  });
+  input.value = "";
+}
+
+function removeAnex(id){
+  if(!confirm("Remover este anexo?")) return;
+  _taskAnexos = _taskAnexos.filter(function(a){return a.id!==id;});
+  renderAnexos();
+}
+
+function viewImage(id){
+  const a = _taskAnexos.find(function(x){return x.id===id;});
+  if(!a) return;
+  document.getElementById("image-modal-img").src = a.dataUrl;
+  document.getElementById("image-modal").classList.remove("hidden");
+}
+
+function formatDuration(seconds){
+  const h = Math.floor(seconds/3600);
+  const m = Math.floor((seconds%3600)/60);
+  const s = seconds%60;
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+function formatDateTime(iso){
+  if(!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+
+function updateTimerDisplay(){
+  const display = document.getElementById("timer-display");
+  if(!display) return;
+  let total = _taskTempoTotal||0;
+  if(_timerInterval && _timerStart) total += Math.floor((Date.now()-_timerStart)/1000);
+  display.textContent = formatDuration(total);
+  display.classList.toggle("running", !!_timerInterval);
+  const info = document.getElementById("timer-info-text");
+  if(info){
+    if(_timerInterval) info.textContent = "Cronometrando agora...";
+    else if(_taskTempoTotal>0) info.textContent = "Tempo já acumulado nesta atividade.";
+    else info.textContent = "Clique em Iniciar para começar a cronometrar";
+  }
+  const btn = document.getElementById("timer-btn");
+  if(btn){
+    btn.className = _timerInterval? "timer-btn stop" : "timer-btn start";
+    btn.textContent = _timerInterval? "Pausar" : "Iniciar";
+  }
+}
+
+function toggleTimer(){
+  if(_timerInterval){stopTimerInternal();}
+  else {_timerStart = Date.now(); _timerInterval = setInterval(updateTimerDisplay, 1000); updateTimerDisplay();}
+}
+
+function stopTimerInternal(){
+  if(!_timerInterval) return;
+  const elapsed = Math.floor((Date.now()-_timerStart)/1000);
+  _taskTempoTotal = (_taskTempoTotal||0) + elapsed;
+  _taskSessoes.push({inicio: new Date(_timerStart).toISOString(), fim: new Date().toISOString(), duracao: elapsed, autor: currentUser.nome});
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  _timerStart = null;
+  updateTimerDisplay();
+  renderSessoes();
+}
+
+function renderSessoes(){
+  const wrap = document.getElementById("timer-sessions");
+  if(!wrap) return;
+  if(_taskSessoes.length===0){wrap.innerHTML = "";return;}
+  wrap.innerHTML = "<strong>Últimas sessões:</strong><br>" + _taskSessoes.slice(-5).reverse().map(function(s){
+    return "• " + formatDateTime(s.inicio) + " — " + formatDuration(s.duracao) + " (" + esc(s.autor||"") + ")";
+  }).join("<br>");
+}
+
 /* ====================== FERIADOS ====================== */
 const LS_CUSTOM_HOLIDAYS = "jt_holidays_v1";
 
@@ -2850,19 +3062,8 @@ function renderTasks(){
     const prioTag = '<span class="priority-tag '+prioKey+'">'+prio+'</span>';
     const histTxt = (t.historico&&t.historico.length>0)? '<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Última conclusão: '+formatDate(t.historico[t.historico.length-1].data)+'</div>' : "";
     const tagsHtml = (t.tags&&t.tags.length>0)? '<div style="margin-top:4px">'+t.tags.map(function(tg){return '<span class="tag-chip">🏷 '+esc(tg)+'</span>';}).join("")+'</div>' : "";
-    const cCount = (t.comentarios||[]).length;
-    const aCount = (t.anexos||[]).length;
-    const tTotal = t.tempoTotal||0;
-    let statsHtml = "";
-    if(cCount>0||aCount>0||tTotal>0){
-      statsHtml = '<div class="task-stats-line">';
-      if(cCount>0) statsHtml += '<span>💬 '+cCount+'</span>';
-      if(aCount>0) statsHtml += '<span>📎 '+aCount+'</span>';
-      if(tTotal>0) statsHtml += '<span>⏱️ '+formatDuration(tTotal)+'</span>';
-      statsHtml += '</div>';
-    }
     return '<tr>'+
-      '<td><div style="font-weight:700">'+esc(t.titulo)+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+statsHtml+histTxt+'</td>'+
+      '<td><div style="font-weight:700">'+esc(t.titulo)+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+histTxt+'</td>'+
       '<td><span class="area-tag">'+esc(t.area)+'</span><br><span style="font-size:13px">'+esc(t.setor)+'</span></td>'+
       (function(){
         const resps = getResponsaveis(t);
@@ -3041,6 +3242,7 @@ function openTaskModal(){
   updateTaskSetores();
   if(currentUser.papel==="funcionario") document.getElementById("task-setor").value = currentUser.setor;
   renderRespList(document.getElementById("task-area").value, document.getElementById("task-setor").value, initSel);
+  loadTaskExtras(null);
   document.getElementById("task-modal").classList.remove("hidden");
 }
 function editTask(id){
@@ -3055,6 +3257,7 @@ function editTask(id){
   document.getElementById("task-setor").value = t.setor;
   document.getElementById("task-resp-extra").value = "";
   renderRespList(t.area, t.setor, getResponsaveis(t));
+  loadTaskExtras(t);
   document.getElementById("task-prazo").value = t.prazo||"";
   document.getElementById("task-status").value = t.status;
   document.getElementById("task-periodicidade").value = t.periodicidade||"Avulsa";
@@ -3084,11 +3287,15 @@ function nextPrazo(prazoStr, periodicidade){
   return d.toISOString().slice(0,10);
 }
 
-function closeTaskModal(){ document.getElementById("task-modal").classList.add("hidden"); }
+function closeTaskModal(){
+  if(_timerInterval) stopTimerInternal();
+  document.getElementById("task-modal").classList.add("hidden");
+}
 function saveTask(){
   const id = document.getElementById("task-id").value;
   const titulo = document.getElementById("task-titulo").value.trim();
   if(!titulo){ alert("Informe o título."); return; }
+  if(_timerInterval) stopTimerInternal();
   const data = {
     titulo,
     descricao: document.getElementById("task-descricao").value.trim(),
@@ -3099,7 +3306,11 @@ function saveTask(){
     status: document.getElementById("task-status").value,
     periodicidade: document.getElementById("task-periodicidade").value,
     prioridade: document.getElementById("task-prioridade").value,
-    tags: _taskTags.slice()
+    tags: _taskTags.slice(),
+    comentarios: _taskComments.slice(),
+    anexos: _taskAnexos.slice(),
+    tempoTotal: _taskTempoTotal,
+    sessoesTempo: _taskSessoes.slice()
   };
   const tasks = loadTasks();
   const today = new Date().toISOString().slice(0,10);
