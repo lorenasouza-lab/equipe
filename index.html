@@ -219,6 +219,44 @@ tbody tr:hover{background:#f8fafc}
 .prazo-warning b{color:#78350f}
 .prazo-warning button{background:#f59e0b;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:700;font-size:11px}
 .prazo-warning button:hover{background:#d97706}
+.chat-wrap{display:grid;grid-template-columns:280px 1fr;gap:12px;height:calc(100vh - 200px);min-height:500px}
+@media(max-width:760px){.chat-wrap{grid-template-columns:1fr;height:auto}}
+.chat-sidebar{background:var(--card);border-radius:10px;padding:14px;box-shadow:var(--shadow);overflow-y:auto}
+.chat-sidebar h3{margin:0 0 10px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.chat-room{padding:10px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:4px;transition:background .15s}
+.chat-room:hover{background:#f1f5f9}
+.chat-room.active{background:rgba(29,169,240,.12);color:var(--blue-dark)}
+.chat-room .room-ico{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.chat-room.geral .room-ico{background:linear-gradient(135deg,var(--blue),var(--blue-dark))}
+.chat-room.area .room-ico{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
+.chat-room.setor .room-ico{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.chat-room .room-info{flex:1;min-width:0}
+.chat-room .room-nome{font-size:13.5px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-room .room-prev{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-room .room-badge{background:var(--red);color:#fff;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;min-width:18px;text-align:center}
+.chat-main{background:var(--card);border-radius:10px;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
+.chat-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.chat-header h3{margin:0;font-size:15px;color:var(--text);font-weight:800}
+.chat-header .header-info{font-size:11px;color:var(--muted);margin-top:2px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;background:#f8fafc;display:flex;flex-direction:column;gap:10px}
+.chat-msg{display:flex;gap:8px;max-width:80%}
+.chat-msg.own{align-self:flex-end;flex-direction:row-reverse}
+.chat-msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
+.chat-msg-bubble{background:#fff;padding:8px 12px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);font-size:13.5px}
+.chat-msg.own .chat-msg-bubble{background:var(--blue);color:#fff}
+.chat-msg-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.chat-msg.own .chat-msg-meta{color:rgba(255,255,255,.8)}
+.chat-msg-autor{font-weight:700;font-size:11px;color:var(--blue-dark);margin-bottom:2px}
+.chat-msg.own .chat-msg-autor{display:none}
+.chat-input-area{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.chat-input-area textarea{flex:1;border:1px solid var(--border);border-radius:18px;padding:8px 14px;font-size:13.5px;font-family:inherit;resize:none;min-height:40px;max-height:100px}
+.chat-input-area button{background:var(--blue);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.chat-input-area button:hover{background:var(--blue-dark)}
+.chat-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.btn-meet{background:#16a34a;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;gap:4px}
+.btn-meet:hover{background:#15803d}
+.cal-day .meeting-card{font-size:10px;padding:2px 6px;background:#dcfce7;border-left:3px solid #16a34a;border-radius:4px;color:#166534;font-weight:700;margin-top:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-day .meeting-card:hover{background:#bbf7d0}
 .cal-day.other-month{opacity:.4}
 .cal-day.today{border-color:var(--blue);background:rgba(29,169,240,.08);box-shadow:0 0 0 2px rgba(29,169,240,.2)}
 .cal-day-num{font-weight:700;color:var(--text);font-size:13px;margin-bottom:2px}
@@ -654,6 +692,7 @@ tbody tr:hover{background:#f8fafc}
       <button id="tab-processos" class="tab" data-tab="processos" onclick="switchTab('processos')">📚 Processos</button>
       <button id="tab-anotacoes" class="tab" data-tab="anotacoes" onclick="switchTab('anotacoes')">📝 Anotações</button>
       <button id="tab-agenda" class="tab" data-tab="agenda" onclick="switchTab('agenda')">📅 Agenda</button>
+      <button id="tab-chat" class="tab" data-tab="chat" onclick="switchTab('chat')">💬 Chat</button>
       <button id="tab-organograma" class="tab" data-tab="organograma" onclick="switchTab('organograma')">👥 Organograma</button>
       <button id="tab-dashboard" class="tab" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
       <button id="tab-rotinas" class="tab hidden" data-tab="rotinas" onclick="switchTab('rotinas')">📈 Rotinas Gerenciais</button>
@@ -1059,6 +1098,7 @@ tbody tr:hover{background:#f8fafc}
             <button onclick="calToday()">Hoje</button>
             <button onclick="calNav(1)">Próximo ›</button>
             <button id="btn-ausencia" class="hidden" onclick="openAusenciaModal()" style="background:#ec4899;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:700">+ Ausência</button>
+            <button onclick="openReuniaoModal()" style="background:#16a34a;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:700">📞 Agendar reunião</button>
           </div>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
@@ -1117,6 +1157,34 @@ tbody tr:hover{background:#f8fafc}
         <div>
           <div>Você ajudou a salvar <span class="sb-counter" id="papel-counter">0 folhas</span> de papel usando este sistema.</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">Estimativa: cada anotação digital substitui ~1 folha de papel.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-chat" class="hidden">
+      <div class="chat-wrap">
+        <div class="chat-sidebar">
+          <h3>📢 Canais</h3>
+          <div id="chat-rooms-canais"></div>
+          <h3 style="margin-top:18px">👥 Mensagens diretas</h3>
+          <div id="chat-rooms-dms"></div>
+          <button id="btn-new-dm" class="btn btn-secondary btn-sm" style="margin-top:10px;width:100%" onclick="openNewDM()">+ Nova conversa</button>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header">
+            <div>
+              <h3 id="chat-room-title">Selecione um canal</h3>
+              <div class="header-info" id="chat-room-info"></div>
+            </div>
+            <button id="chat-meet-btn" class="btn-meet hidden" onclick="criarReuniaoChat()">📞 Iniciar reunião</button>
+          </div>
+          <div class="chat-messages" id="chat-messages-list">
+            <div class="chat-empty">Selecione um canal ao lado para começar a conversar.</div>
+          </div>
+          <div class="chat-input-area" id="chat-input-area" style="display:none">
+            <textarea id="chat-input" placeholder="Digite sua mensagem..." onkeydown="handleChatKey(event)"></textarea>
+            <button onclick="enviarMensagem()" title="Enviar">➤</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1558,6 +1626,8 @@ const LS_PROCESSOS = "jt_processos_v1";
 const LS_AVISOS = "jt_avisos_v1";
 const LS_NOTAS = "jt_notas_v1";
 const LS_AUSENCIAS = "jt_ausencias_v1";
+const LS_MENSAGENS = "jt_mensagens_v1";
+const LS_REUNIOES = "jt_reunioes_v1";
 
 function loadLS(key, def){ try{const v=JSON.parse(localStorage.getItem(key)); return v==null?def:v;}catch{return def;} }
 function saveLS(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
@@ -1579,6 +1649,10 @@ function loadNotas(){ return loadLS(LS_NOTAS, []); }
 function saveNotas(n){ _lastLocalSave[LS_NOTAS] = Date.now(); saveLS(LS_NOTAS, n); if(_fbConnected) syncCollectionToFb("notas", n); }
 function loadAusencias(){ return loadLS(LS_AUSENCIAS, []); }
 function saveAusencias(a){ _lastLocalSave[LS_AUSENCIAS] = Date.now(); saveLS(LS_AUSENCIAS, a); if(_fbConnected) syncCollectionToFb("ausencias", a); }
+function loadMensagens(){ return loadLS(LS_MENSAGENS, []); }
+function saveMensagens(m){ _lastLocalSave[LS_MENSAGENS] = Date.now(); saveLS(LS_MENSAGENS, m); if(_fbConnected) syncCollectionToFb("mensagens", m); }
+function loadReunioes(){ return loadLS(LS_REUNIOES, []); }
+function saveReunioes(r){ _lastLocalSave[LS_REUNIOES] = Date.now(); saveLS(LS_REUNIOES, r); if(_fbConnected) syncCollectionToFb("reunioes", r); }
 
 let currentUser = null, currentArea = null;
 let chartSetor=null, chartStatus=null, chartStack=null, chartPessoas=null;
@@ -1850,6 +1924,7 @@ function startApp(){
   document.getElementById("tab-atividades").classList.toggle("hidden", r==="cfo");
   document.getElementById("tab-processos").classList.toggle("hidden", r==="cfo");
   document.getElementById("tab-anotacoes").classList.toggle("hidden", r==="cfo");
+  document.getElementById("tab-chat").classList.toggle("hidden", r==="cfo");
   document.getElementById("tab-agenda").classList.toggle("hidden", r==="cfo");
   document.getElementById("tab-dashboard").classList.toggle("hidden", r==="funcionario" || r==="cfo");
   document.getElementById("tab-rotinas").classList.toggle("hidden", !(r==="gerente" || r==="cfo"));
@@ -1926,7 +2001,7 @@ function switchTab(tab){
   document.querySelectorAll(".tab").forEach(function(t){ t.classList.remove("active"); });
   const btn = document.querySelector('.tab[data-tab="'+tab+'"]');
   if(btn) btn.classList.add("active");
-  ["apresentacao","manual","atividades","agenda","processos","anotacoes","organograma","dashboard","rotinas","admin"].forEach(function(t){
+  ["apresentacao","manual","atividades","agenda","processos","anotacoes","chat","organograma","dashboard","rotinas","admin"].forEach(function(t){
     const v = document.getElementById("view-"+t);
     if(v) v.classList.toggle("hidden", t!==tab);
   });
@@ -1937,6 +2012,7 @@ function switchTab(tab){
   if(tab==="rotinas") renderRotinas();
   if(tab==="processos") renderProcessos();
   if(tab==="anotacoes") renderNotas();
+  if(tab==="chat") openChat();
   if(tab==="agenda") renderAgenda();
 }
 
@@ -3404,6 +3480,375 @@ function aplicarAjustePrazo(novaData){
   }
 }
 
+/* ====================== CHAT ====================== */
+let _currentRoom = null;
+
+function openChat(){
+  if(!currentUser) return;
+  renderChatRooms();
+  if(!_currentRoom){
+    selectRoom("geral");
+  } else {
+    renderChatMessages();
+  }
+}
+
+function getRoomLabel(roomId){
+  if(roomId==="geral") return {nome:"📢 Geral da empresa", info:"Todos os funcionários"};
+  if(roomId.startsWith("area-")) return {nome:"👥 "+roomId.substring(5), info:"Membros desta área"};
+  if(roomId.startsWith("setor-")){
+    const partes = roomId.substring(6).split("|");
+    return {nome:"🏢 "+partes[1], info:partes[0]};
+  }
+  if(roomId.startsWith("dm-")){
+    const ids = roomId.substring(3).split("_");
+    const otherId = ids.find(function(x){return x!==currentUser.id;});
+    const other = loadUsers().find(function(u){return u.id===otherId;});
+    return {nome:"💬 "+(other?other.nome:"Conversa"), info:"Mensagem direta"};
+  }
+  return {nome:roomId, info:""};
+}
+
+function userCanSeeRoom(roomId, user){
+  if(roomId==="geral") return true;
+  if(roomId.startsWith("area-")){
+    const area = roomId.substring(5);
+    if(user.papel==="gerente") return true;
+    return user.area===area;
+  }
+  if(roomId.startsWith("setor-")){
+    const partes = roomId.substring(6).split("|");
+    if(user.papel==="gerente") return true;
+    return user.area===partes[0] && user.setor===partes[1];
+  }
+  if(roomId.startsWith("dm-")){
+    return roomId.substring(3).split("_").indexOf(user.id)>=0;
+  }
+  return false;
+}
+
+function getDMRoomId(userId1, userId2){
+  return "dm-"+[userId1,userId2].sort().join("_");
+}
+
+function getMessagesForRoom(roomId){
+  return loadMensagens().filter(function(m){return m.roomId===roomId;}).sort(function(a,b){return (a.timestamp||"").localeCompare(b.timestamp||"");});
+}
+
+function getUnreadCount(roomId){
+  const msgs = getMessagesForRoom(roomId);
+  return msgs.filter(function(m){
+    return m.autorId !== currentUser.id && !(m.lidaPor||[]).includes(currentUser.id);
+  }).length;
+}
+
+function renderChatRooms(){
+  const canaisDiv = document.getElementById("chat-rooms-canais");
+  const dmsDiv = document.getElementById("chat-rooms-dms");
+  if(!canaisDiv) return;
+  // Canais por padrão
+  const rooms = [{id:"geral", klass:"geral", ico:"📢", nome:"Geral", desc:"Toda a empresa"}];
+  if(currentUser.area){
+    rooms.push({id:"area-"+currentUser.area, klass:"area", ico:"👥", nome:currentUser.area.replace("Equipe ","").replace("de Gente","Gente"), desc:"Sua área"});
+  } else if(currentUser.papel==="gerente"){
+    rooms.push({id:"area-Equipe Financeira", klass:"area", ico:"💰", nome:"Equipe Financeira", desc:"Toda área Financeira"});
+    rooms.push({id:"area-Equipe de Gente & Gestão", klass:"area", ico:"👥", nome:"Gente & Gestão", desc:"Toda área de G&G"});
+  }
+  if(currentUser.setor){
+    rooms.push({id:"setor-"+currentUser.area+"|"+currentUser.setor, klass:"setor", ico:"🏢", nome:currentUser.setor, desc:"Seu setor"});
+  }
+  canaisDiv.innerHTML = rooms.map(function(r){
+    const unread = getUnreadCount(r.id);
+    const last = getMessagesForRoom(r.id).slice(-1)[0];
+    const prev = last? (last.autorNome+": "+last.texto).substring(0,40) : "Sem mensagens";
+    return '<div class="chat-room '+r.klass+(_currentRoom===r.id?" active":"")+'" onclick="selectRoom(\''+r.id+'\')">'+
+      '<div class="room-ico">'+r.ico+'</div>'+
+      '<div class="room-info"><div class="room-nome">'+esc(r.nome)+'</div><div class="room-prev">'+esc(prev)+'</div></div>'+
+      (unread>0?'<div class="room-badge">'+unread+'</div>':'')+
+    '</div>';
+  }).join("");
+  // DMs - lista de usuários com quem já conversou
+  const dms = new Set();
+  loadMensagens().forEach(function(m){
+    if(m.roomId && m.roomId.startsWith("dm-") && m.roomId.substring(3).split("_").indexOf(currentUser.id)>=0){
+      const ids = m.roomId.substring(3).split("_");
+      const otherId = ids.find(function(x){return x!==currentUser.id;});
+      if(otherId) dms.add(otherId);
+    }
+  });
+  const users = loadUsers();
+  if(dms.size===0){
+    dmsDiv.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;text-align:center">Nenhuma conversa ainda</div>';
+  } else {
+    dmsDiv.innerHTML = Array.from(dms).map(function(uid){
+      const u = users.find(function(x){return x.id===uid;});
+      if(!u) return "";
+      const roomId = getDMRoomId(currentUser.id, uid);
+      const unread = getUnreadCount(roomId);
+      const last = getMessagesForRoom(roomId).slice(-1)[0];
+      const prev = last? last.texto.substring(0,40) : "";
+      return '<div class="chat-room'+(_currentRoom===roomId?" active":"")+'" onclick="selectRoom(\''+roomId+'\')">'+
+        '<div class="room-ico">'+esc(initials(u.nome))+'</div>'+
+        '<div class="room-info"><div class="room-nome">'+esc(u.nome)+'</div><div class="room-prev">'+esc(prev)+'</div></div>'+
+        (unread>0?'<div class="room-badge">'+unread+'</div>':'')+
+      '</div>';
+    }).join("");
+  }
+}
+
+function selectRoom(roomId){
+  _currentRoom = roomId;
+  const lbl = getRoomLabel(roomId);
+  document.getElementById("chat-room-title").textContent = lbl.nome;
+  document.getElementById("chat-room-info").textContent = lbl.info;
+  document.getElementById("chat-meet-btn").classList.remove("hidden");
+  document.getElementById("chat-input-area").style.display = "flex";
+  // Marcar mensagens como lidas
+  marcarMensagensLidas(roomId);
+  renderChatRooms();
+  renderChatMessages();
+}
+
+function marcarMensagensLidas(roomId){
+  const msgs = loadMensagens();
+  let changed = false;
+  msgs.forEach(function(m){
+    if(m.roomId===roomId && m.autorId!==currentUser.id){
+      m.lidaPor = m.lidaPor||[];
+      if(!m.lidaPor.includes(currentUser.id)){
+        m.lidaPor.push(currentUser.id);
+        changed = true;
+      }
+    }
+  });
+  if(changed) saveMensagens(msgs);
+}
+
+function renderChatMessages(){
+  const wrap = document.getElementById("chat-messages-list");
+  if(!wrap || !_currentRoom) return;
+  const msgs = getMessagesForRoom(_currentRoom);
+  if(msgs.length===0){
+    wrap.innerHTML = '<div class="chat-empty">Nenhuma mensagem ainda. Seja o primeiro a escrever!</div>';
+    return;
+  }
+  wrap.innerHTML = msgs.map(function(m){
+    const own = m.autorId===currentUser.id;
+    const tm = m.timestamp? new Date(m.timestamp) : null;
+    const tStr = tm? tm.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "";
+    const dStr = tm? tm.toLocaleDateString("pt-BR") : "";
+    let textoHtml = esc(m.texto||"");
+    // Se contém link Jitsi, transformar em botão
+    textoHtml = textoHtml.replace(/(https:\/\/meet\.jit\.si\/[^\s]+)/g, function(url){
+      return '<br><a href="'+url+'" target="_blank" style="display:inline-block;background:#16a34a;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:700;font-size:12px;margin-top:4px">📞 Entrar na reunião</a>';
+    });
+    return '<div class="chat-msg'+(own?" own":"")+'">'+
+      '<div class="chat-msg-avatar">'+esc(initials(m.autorNome||""))+'</div>'+
+      '<div>'+
+        '<div class="chat-msg-bubble">'+
+          '<div class="chat-msg-autor">'+esc(m.autorNome||"")+'</div>'+
+          textoHtml+
+          '<div class="chat-msg-meta">'+tStr+(dStr?" · "+dStr:"")+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function enviarMensagem(){
+  const inp = document.getElementById("chat-input");
+  const texto = inp.value.trim();
+  if(!texto || !_currentRoom) return;
+  const msg = {
+    id: crypto.randomUUID(),
+    roomId: _currentRoom,
+    autorId: currentUser.id,
+    autorNome: currentUser.nome,
+    texto: texto,
+    timestamp: new Date().toISOString(),
+    lidaPor: [currentUser.id]
+  };
+  const msgs = loadMensagens();
+  msgs.push(msg);
+  saveMensagens(msgs);
+  inp.value = "";
+  renderChatRooms();
+  renderChatMessages();
+}
+
+function handleChatKey(e){
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    enviarMensagem();
+  }
+}
+
+function openNewDM(){
+  const users = loadUsers().filter(function(u){return u.id!==currentUser.id;});
+  if(users.length===0){ alert("Nenhum outro usuário cadastrado."); return; }
+  let html_opts = "";
+  users.sort(function(a,b){return a.nome.localeCompare(b.nome);}).forEach(function(u){
+    html_opts += '<div onclick="iniciarDM(\''+u.id+'\')" style="padding:10px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:10px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px">'+esc(initials(u.nome))+'</div><div><div style="font-weight:700">'+esc(u.nome)+'</div><div style="font-size:11px;color:var(--muted)">'+esc(u.cargo||roleLabel(u.papel))+'</div></div></div>';
+  });
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.style.zIndex = "1000";
+  overlay.innerHTML = '<div class="modal" style="max-width:400px"><h2>Iniciar conversa</h2><div style="max-height:400px;overflow-y:auto">'+html_opts+'</div><div class="modal-actions"><button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">Fechar</button></div></div>';
+  document.body.appendChild(overlay);
+}
+
+function iniciarDM(otherId){
+  document.querySelectorAll(".modal-overlay").forEach(function(o){if(o.id!=="task-modal"&&o.id!=="user-modal")o.remove();});
+  const roomId = getDMRoomId(currentUser.id, otherId);
+  selectRoom(roomId);
+}
+
+function criarReuniaoChat(){
+  if(!_currentRoom) return;
+  const titulo = prompt("Título da reunião:");
+  if(!titulo) return;
+  const meetId = "JustTravel-"+Math.random().toString(36).substring(2,10);
+  const link = "https://meet.jit.si/"+meetId;
+  const msg = {
+    id: crypto.randomUUID(),
+    roomId: _currentRoom,
+    autorId: currentUser.id,
+    autorNome: currentUser.nome,
+    texto: "📞 "+titulo+"\n"+link,
+    timestamp: new Date().toISOString(),
+    lidaPor: [currentUser.id]
+  };
+  const msgs = loadMensagens();
+  msgs.push(msg);
+  saveMensagens(msgs);
+  renderChatMessages();
+  // Abre a reunião automaticamente para quem criou
+  window.open(link, "_blank");
+}
+
+/* ====================== REUNIÕES NA AGENDA ====================== */
+function getReunioesOfMonth(year, month){
+  const all = loadReunioes();
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month+1, 0);
+  return all.filter(function(r){
+    const d = parseLocalDate(r.data);
+    return d && d >= monthStart && d <= monthEnd;
+  });
+}
+
+function openReuniaoModal(dataDefault){
+  if(!currentUser) return;
+  let html_modal = '<div class="modal-overlay" id="reuniao-modal"><div class="modal" style="max-width:520px">'+
+    '<h2>📞 Agendar reunião</h2>'+
+    '<input type="hidden" id="reu-id">'+
+    '<div class="form-group"><label>Título</label><input type="text" id="reu-titulo" placeholder="Ex.: Alinhamento semanal"></div>'+
+    '<div class="form-group"><label>Descrição</label><textarea id="reu-desc" placeholder="Pauta da reunião..."></textarea></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+      '<div class="form-group"><label>Data</label><input type="date" id="reu-data" value="'+(dataDefault||"")+'"></div>'+
+      '<div class="form-group"><label>Hora</label><input type="time" id="reu-hora" value="10:00"></div>'+
+    '</div>'+
+    '<div class="form-group"><label>Duração (minutos)</label><input type="number" id="reu-dur" value="30" min="15" step="15"></div>'+
+    '<div class="form-group"><label>Participantes</label><div id="reu-parts" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px"></div></div>'+
+    '<div class="modal-actions">'+
+      '<button id="reu-delete-btn" class="btn btn-danger hidden" onclick="deleteReuniao()">Excluir</button>'+
+      '<button class="btn btn-secondary" onclick="document.getElementById(\'reuniao-modal\').remove()">Cancelar</button>'+
+      '<button class="btn btn-primary" onclick="saveReuniao()">Agendar</button>'+
+    '</div>'+
+  '</div></div>';
+  const div = document.createElement("div");
+  div.innerHTML = html_modal;
+  document.body.appendChild(div.firstChild);
+  // Popular participantes
+  const partsDiv = document.getElementById("reu-parts");
+  const users = loadUsers();
+  partsDiv.innerHTML = users.sort(function(a,b){return a.nome.localeCompare(b.nome);}).map(function(u){
+    return '<label style="display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer"><input type="checkbox" class="reu-part-chk" value="'+u.id+'" '+(u.id===currentUser.id?"checked disabled":"")+'> <span>'+esc(u.nome)+'</span><span style="color:var(--muted);font-size:11px">'+(u.setor||roleLabel(u.papel))+'</span></label>';
+  }).join("");
+}
+
+function saveReuniao(){
+  const titulo = document.getElementById("reu-titulo").value.trim();
+  const data = document.getElementById("reu-data").value;
+  const hora = document.getElementById("reu-hora").value;
+  const dur = parseInt(document.getElementById("reu-dur").value)||30;
+  if(!titulo || !data || !hora){ alert("Preencha título, data e hora."); return; }
+  const checks = document.querySelectorAll(".reu-part-chk:checked");
+  const participantes = Array.prototype.map.call(checks, function(c){return c.value;});
+  if(!participantes.includes(currentUser.id)) participantes.push(currentUser.id);
+  const id = document.getElementById("reu-id").value;
+  const meetId = "JustTravel-"+Math.random().toString(36).substring(2,10);
+  const reuniao = {
+    id: id || crypto.randomUUID(),
+    titulo: titulo,
+    descricao: document.getElementById("reu-desc").value.trim(),
+    data: data,
+    hora: hora,
+    duracao: dur,
+    participantes: participantes,
+    meetLink: id? loadReunioes().find(function(r){return r.id===id;}).meetLink : "https://meet.jit.si/"+meetId,
+    criadoPor: currentUser.id,
+    criadoPorNome: currentUser.nome,
+    criado: new Date().toISOString()
+  };
+  const arr = loadReunioes();
+  if(id){
+    const idx = arr.findIndex(function(r){return r.id===id;});
+    if(idx>=0) arr[idx] = Object.assign({}, arr[idx], reuniao);
+  } else {
+    arr.push(reuniao);
+    // Notificar no chat geral
+    const msg = {
+      id: crypto.randomUUID(),
+      roomId: "geral",
+      autorId: currentUser.id,
+      autorNome: currentUser.nome,
+      texto: "📅 Reunião agendada: "+titulo+" em "+formatDate(data)+" às "+hora+"\n"+reuniao.meetLink,
+      timestamp: new Date().toISOString(),
+      lidaPor: [currentUser.id]
+    };
+    const msgs = loadMensagens();
+    msgs.push(msg);
+    saveMensagens(msgs);
+  }
+  saveReunioes(arr);
+  document.getElementById("reuniao-modal").remove();
+  renderAgenda();
+}
+
+function viewReuniao(id){
+  const r = loadReunioes().find(function(x){return x.id===id;});
+  if(!r) return;
+  const users = loadUsers();
+  const partNomes = (r.participantes||[]).map(function(uid){
+    const u = users.find(function(x){return x.id===uid;});
+    return u? u.nome : uid;
+  }).join(", ");
+  let html_modal = '<div class="modal-overlay" id="reuniao-view-modal"><div class="modal" style="max-width:480px">'+
+    '<h2>📞 '+esc(r.titulo)+'</h2>'+
+    '<p><strong>Data:</strong> '+formatDate(r.data)+' às '+r.hora+' ('+r.duracao+' min)</p>'+
+    (r.descricao?'<p><strong>Pauta:</strong><br>'+esc(r.descricao)+'</p>':'')+
+    '<p><strong>Participantes:</strong> '+esc(partNomes)+'</p>'+
+    '<p><strong>Criada por:</strong> '+esc(r.criadoPorNome||"")+'</p>'+
+    '<div style="background:#dcfce7;padding:14px;border-radius:8px;margin:14px 0;text-align:center"><a href="'+r.meetLink+'" target="_blank" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700">📞 Entrar na reunião agora</a></div>'+
+    '<div class="modal-actions">'+
+      (r.criadoPor===currentUser.id?'<button class="btn btn-danger" onclick="deleteReuniaoConfirm(\''+r.id+'\')">Excluir</button>':'')+
+      '<button class="btn btn-secondary" onclick="document.getElementById(\'reuniao-view-modal\').remove()">Fechar</button>'+
+    '</div>'+
+  '</div></div>';
+  const div = document.createElement("div");
+  div.innerHTML = html_modal;
+  document.body.appendChild(div.firstChild);
+}
+
+function deleteReuniaoConfirm(id){
+  if(!confirm("Excluir esta reunião?")) return;
+  saveReunioes(loadReunioes().filter(function(r){return r.id!==id;}));
+  document.getElementById("reuniao-view-modal").remove();
+  renderAgenda();
+}
+
 /* ====================== FERIADOS ====================== */
 const LS_CUSTOM_HOLIDAYS = "jt_holidays_v1";
 
@@ -4075,6 +4520,12 @@ function renderAgenda(){
   });
   const holidaysMap = getAllHolidays(year);
   const ausenciasMonth = getAusenciasInRange(year, month);
+  const reunioesMonth = getReunioesOfMonth(year, month);
+  const reunioesByDate = {};
+  reunioesMonth.forEach(function(r){
+    if(!reunioesByDate[r.data]) reunioesByDate[r.data] = [];
+    reunioesByDate[r.data].push(r);
+  });
   for(let i=firstDay-1; i>=0; i--){
     html += '<div class="cal-day other-month"><div class="cal-day-num">'+(prevLast-i)+'</div></div>';
   }
@@ -4103,6 +4554,11 @@ function renderAgenda(){
       dayHtml += '<div class="absence-card '+a.tipo+'" onclick="event.stopPropagation();editAusencia(\''+a.id+'\')" title="'+esc(tipoAusenciaLabel(a.tipo))+' - '+esc(a.nome)+'">'+ico+' '+esc(fname)+'</div>';
     });
     if(ausenciasHoje.length>2) dayHtml += '<div class="cal-more">+ '+(ausenciasHoje.length-2)+' ausência(s)</div>';
+    const reunioesHoje = reunioesByDate[dStr]||[];
+    reunioesHoje.slice(0,2).forEach(function(r){
+      dayHtml += '<div class="meeting-card" onclick="event.stopPropagation();viewReuniao(\''+r.id+'\')" title="'+esc(r.titulo)+' - '+r.hora+'">📞 '+r.hora+' '+esc(r.titulo.substring(0,15))+'</div>';
+    });
+    if(reunioesHoje.length>2) dayHtml += '<div class="cal-more">+ '+(reunioesHoje.length-2)+' reunião(ões)</div>';
     const visible = items.slice(0,3);
     visible.forEach(function(t){
       const period = (t.periodicidade||"Avulsa").toLowerCase().replace("í","i");
