@@ -215,6 +215,10 @@ tbody tr:hover{background:#f8fafc}
 .modo-banner button:hover{background:var(--blue-dark)}
 .task-row-title{cursor:pointer}
 .task-row-title:hover{color:var(--blue);text-decoration:underline}
+.prazo-warning{margin-top:6px;padding:8px 12px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:12.5px;color:#92400e;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.prazo-warning b{color:#78350f}
+.prazo-warning button{background:#f59e0b;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:700;font-size:11px}
+.prazo-warning button:hover{background:#d97706}
 .cal-day.other-month{opacity:.4}
 .cal-day.today{border-color:var(--blue);background:rgba(29,169,240,.08);box-shadow:0 0 0 2px rgba(29,169,240,.2)}
 .cal-day-num{font-weight:700;color:var(--text);font-size:13px;margin-bottom:2px}
@@ -1242,7 +1246,7 @@ tbody tr:hover{background:#f8fafc}
       <div class="resp-list" id="task-resp-list"></div>
       <input type="text" id="task-resp-extra" placeholder="Outros (opcional, separar por vírgula): Ex.: João, Maria" style="margin-top:6px">
     </div>
-    <div class="form-group"><label>Prazo</label><input type="date" id="task-prazo"></div>
+    <div class="form-group"><label>Prazo</label><input type="date" id="task-prazo" onchange="validarPrazo()"><div id="prazo-warning-area"></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label>Status</label><select id="task-status">
         <option>Não iniciada</option><option>Em progresso</option><option>Atrasada</option><option>Concluída</option>
@@ -3346,6 +3350,60 @@ function tipoAusenciaLabel(t){
   return t==="ferias"?"Férias":t==="dayoff"?"Day off":t==="atestado"?"Atestado":"Ausência";
 }
 
+/* ====================== VALIDAÇÃO DE PRAZO ====================== */
+function adjustToPreviousWorkday(dateStr){
+  if(!dateStr) return dateStr;
+  const d = parseLocalDate(dateStr);
+  if(!d) return dateStr;
+  const hMap = getAllHolidays(d.getFullYear());
+  let safety = 0;
+  while(safety < 14){
+    const wk = d.getDay();
+    const ds = d.toISOString().slice(0,10);
+    if(wk !== 0 && wk !== 6 && !hMap[ds]) return ds;
+    d.setDate(d.getDate() - 1);
+    safety++;
+  }
+  return dateStr;
+}
+
+function getNonWorkReason(dateStr){
+  if(!dateStr) return null;
+  const d = parseLocalDate(dateStr);
+  if(!d) return null;
+  const wk = d.getDay();
+  if(wk === 0) return "domingo";
+  if(wk === 6) return "sábado";
+  const hMap = getAllHolidays(d.getFullYear());
+  const ds = d.toISOString().slice(0,10);
+  if(hMap[ds]) return hMap[ds].nome;
+  return null;
+}
+
+function validarPrazo(){
+  const input = document.getElementById("task-prazo");
+  const area = document.getElementById("prazo-warning-area");
+  if(!input || !area) return;
+  const val = input.value;
+  area.innerHTML = "";
+  if(!val) return;
+  const reason = getNonWorkReason(val);
+  if(!reason) return;
+  const adjusted = adjustToPreviousWorkday(val);
+  area.innerHTML = '<div class="prazo-warning">'+
+    '<span>⚠️ A data <b>'+formatDate(val)+'</b> é <b>'+esc(reason)+'</b>. Sugerimos mover para o dia útil anterior: <b>'+formatDate(adjusted)+'</b></span>'+
+    '<button type="button" onclick="aplicarAjustePrazo(\''+adjusted+'\')">Ajustar agora</button>'+
+  '</div>';
+}
+
+function aplicarAjustePrazo(novaData){
+  const input = document.getElementById("task-prazo");
+  if(input){
+    input.value = novaData;
+    validarPrazo();
+  }
+}
+
 /* ====================== FERIADOS ====================== */
 const LS_CUSTOM_HOLIDAYS = "jt_holidays_v1";
 
@@ -3804,6 +3862,8 @@ function openTaskModal(){
   document.getElementById("task-periodicidade").value = "Avulsa";
   document.getElementById("task-prioridade").value = "Média";
   document.getElementById("task-historico-wrap").classList.add("hidden");
+  const _pwArea = document.getElementById("prazo-warning-area");
+  if(_pwArea) _pwArea.innerHTML = "";
   _taskTags = [];
   if(document.getElementById("task-tag-area")){
     Array.from(document.getElementById("task-tag-area").querySelectorAll(".tag-chip")).forEach(function(el){el.remove();});
@@ -3832,6 +3892,7 @@ function editTask(id){
   renderRespList(t.area, t.setor, getResponsaveis(t));
   loadTaskExtras(t);
   document.getElementById("task-prazo").value = t.prazo||"";
+  setTimeout(validarPrazo, 50);
   document.getElementById("task-status").value = t.status;
   document.getElementById("task-periodicidade").value = t.periodicidade||"Avulsa";
   document.getElementById("task-prioridade").value = t.prioridade||"Média";
@@ -3850,19 +3911,7 @@ function editTask(id){
 function nextPrazo(prazoStr, periodicidade){
   if(!prazoStr || periodicidade==="Avulsa") return prazoStr;
   const d = parseLocalDate(prazoStr) || new Date(prazoStr);
-  if(periodicidade==="Diária"){
-    d.setDate(d.getDate()+1);
-    // Avança para o próximo dia útil (pula sáb, dom, feriados)
-    let safety = 0;
-    while(safety<14){
-      const wk = d.getDay();
-      const ds = d.toISOString().slice(0,10);
-      const hMap = getAllHolidays(d.getFullYear());
-      if(wk!==0 && wk!==6 && !hMap[ds]) break;
-      d.setDate(d.getDate()+1);
-      safety++;
-    }
-  }
+  if(periodicidade==="Diária") d.setDate(d.getDate()+1);
   else if(periodicidade==="Semanal") d.setDate(d.getDate()+7);
   else if(periodicidade==="Quinzenal") d.setDate(d.getDate()+15);
   else if(periodicidade==="Mensal") d.setMonth(d.getMonth()+1);
@@ -3984,9 +4033,7 @@ function expandRecurrences(tasks, year, month){
     safety = 0;
     while(cursor <= monthEnd && safety<400){
       if(cursor>=monthStart){
-        // Para atividades Diárias: pula sábados, domingos e feriados
-        const skip = (period==="Diária") && isNonWorkDay(cursor);
-        if(!skip) result.push(Object.assign({_data: cursor.toISOString().slice(0,10)}, t));
+        result.push(Object.assign({_data: cursor.toISOString().slice(0,10)}, t));
       }
       const nx = new Date(cursor);
       if(period==="Diária") nx.setDate(nx.getDate()+1);
