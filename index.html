@@ -197,6 +197,24 @@ tbody tr:hover{background:#f8fafc}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-day-name{padding:8px;text-align:center;font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase}
 .cal-day{min-height:90px;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:12px;background:#fafbfd;display:flex;flex-direction:column;gap:3px}
+.cal-day.weekend{background:#f1f5f9;color:var(--gray-4);opacity:.7}
+.cal-day.weekend .cal-day-num{color:var(--gray-4)}
+.cal-day-name.weekend{background:#f1f5f9;color:var(--gray-4)}
+.absence-card{background:#fce7f3;border-left:3px solid #ec4899;border-radius:6px;padding:3px 8px;margin-top:3px;font-size:10px;color:#9f1239;font-weight:700;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.absence-card.ferias{background:#fef3c7;border-left-color:#eab308;color:#92400e}
+.absence-card.dayoff{background:#dbeafe;border-left-color:#3b82f6;color:#1e40af}
+.absence-card.atestado{background:#fee2e2;border-left-color:#dc2626;color:#991b1b}
+.absence-card:hover{filter:brightness(.95)}
+.task-modal-readonly input:not(.task-resp-chk),.task-modal-readonly select,.task-modal-readonly textarea{pointer-events:none;background:#f8fafc !important;color:#475569;border-color:#e2e8f0}
+.task-modal-readonly .resp-list{pointer-events:none;opacity:.85}
+.task-modal-readonly .anexo-upload-btn,.task-modal-readonly .anexo-remove,.task-modal-readonly #task-tag-area input,.task-modal-readonly .tag-chip .x{display:none !important}
+.task-modal-readonly .resp-list .resp-item{cursor:default}
+.task-modal-readonly #task-resp-extra{display:none}
+.modo-banner{background:#dbeafe;border-left:4px solid var(--blue);padding:10px 14px;border-radius:8px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--blue-dark);font-weight:600}
+.modo-banner button{background:var(--blue);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px}
+.modo-banner button:hover{background:var(--blue-dark)}
+.task-row-title{cursor:pointer}
+.task-row-title:hover{color:var(--blue);text-decoration:underline}
 .cal-day.other-month{opacity:.4}
 .cal-day.today{border-color:var(--blue);background:rgba(29,169,240,.08);box-shadow:0 0 0 2px rgba(29,169,240,.2)}
 .cal-day-num{font-weight:700;color:var(--text);font-size:13px;margin-bottom:2px}
@@ -1036,6 +1054,7 @@ tbody tr:hover{background:#f8fafc}
             <button onclick="calNav(-1)">‹ Anterior</button>
             <button onclick="calToday()">Hoje</button>
             <button onclick="calNav(1)">Próximo ›</button>
+            <button id="btn-ausencia" class="hidden" onclick="openAusenciaModal()" style="background:#ec4899;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:700">+ Ausência</button>
           </div>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
@@ -1211,6 +1230,7 @@ tbody tr:hover{background:#f8fafc}
 <div id="task-modal" class="modal-overlay hidden">
   <div class="modal">
     <h2 id="modal-title">Nova atividade</h2>
+    <div id="modo-banner" class="modo-banner hidden"><span>👁️ Modo de visualização — você está apenas lendo esta atividade.</span><button onclick="enableEditMode()">✏️ Editar</button></div>
     <input type="hidden" id="task-id">
     <div class="form-group"><label>Título</label><input type="text" id="task-titulo"></div>
     <div class="form-group"><label>Descrição</label><textarea id="task-descricao"></textarea></div>
@@ -1288,6 +1308,30 @@ tbody tr:hover{background:#f8fafc}
 
 <div id="image-modal" class="image-modal hidden" onclick="this.classList.add('hidden')">
   <img id="image-modal-img" src="">
+</div>
+
+<div id="ausencia-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:520px">
+    <h2 id="ausencia-modal-title">Registrar ausência</h2>
+    <input type="hidden" id="aus-id">
+    <div class="form-group"><label>Funcionário</label><select id="aus-user"></select></div>
+    <div class="form-group"><label>Tipo</label><select id="aus-tipo">
+      <option value="ferias">🏖️ Férias</option>
+      <option value="dayoff">☀️ Day off / Folga</option>
+      <option value="atestado">🏥 Atestado médico</option>
+      <option value="outro">📌 Outro</option>
+    </select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label>Data início</label><input type="date" id="aus-inicio"></div>
+      <div class="form-group"><label>Data fim</label><input type="date" id="aus-fim"></div>
+    </div>
+    <div class="form-group"><label>Observação (opcional)</label><textarea id="aus-obs"></textarea></div>
+    <div class="modal-actions">
+      <button id="aus-delete-btn" class="btn btn-danger hidden" onclick="deleteAusencia()">Excluir</button>
+      <button class="btn btn-secondary" onclick="closeAusenciaModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAusencia()">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <div id="nota-modal" class="modal-overlay hidden">
@@ -1509,6 +1553,7 @@ const LS_TEAM_IMPORTED = "jt_team_imported_v1";
 const LS_PROCESSOS = "jt_processos_v1";
 const LS_AVISOS = "jt_avisos_v1";
 const LS_NOTAS = "jt_notas_v1";
+const LS_AUSENCIAS = "jt_ausencias_v1";
 
 function loadLS(key, def){ try{const v=JSON.parse(localStorage.getItem(key)); return v==null?def:v;}catch{return def;} }
 function saveLS(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
@@ -1528,6 +1573,8 @@ function loadAvisos(){ return loadLS(LS_AVISOS, []); }
 function saveAvisos(a){ saveLS(LS_AVISOS, a); if(_fbConnected) syncCollectionToFb("avisos", a); }
 function loadNotas(){ return loadLS(LS_NOTAS, []); }
 function saveNotas(n){ saveLS(LS_NOTAS, n); if(_fbConnected) syncCollectionToFb("notas", n); }
+function loadAusencias(){ return loadLS(LS_AUSENCIAS, []); }
+function saveAusencias(a){ saveLS(LS_AUSENCIAS, a); if(_fbConnected) syncCollectionToFb("ausencias", a); }
 
 let currentUser = null, currentArea = null;
 let chartSetor=null, chartStatus=null, chartStack=null, chartPessoas=null;
@@ -1806,6 +1853,8 @@ function startApp(){
   document.getElementById("edit-mvv-btn").classList.toggle("hidden", r!=="gerente");
   document.getElementById("btn-new-rot").classList.toggle("hidden", r!=="gerente");
   document.getElementById("btn-import-team").classList.toggle("hidden", !isFullAdmin());
+  const btnAus = document.getElementById("btn-ausencia");
+  if(btnAus) btnAus.classList.toggle("hidden", !(currentUser.papel==="gerente" || (currentUser.papel==="coordenador" && currentUser.adminArea)));
   document.getElementById("btn-cloud").classList.toggle("hidden", !isFullAdmin());
   // Se já conectado, mostra texto diferente
   if(_fbConnected){
@@ -1828,8 +1877,8 @@ function startApp(){
   const fa = document.getElementById("filter-area");
   const fs = document.getElementById("filter-setor");
   if(r==="funcionario"){
-    fa.innerHTML = '<option value="'+currentUser.area+'">'+currentUser.area+'</option>'; fa.disabled=true;
-    fs.innerHTML = '<option value="'+currentUser.setor+'">'+currentUser.setor+'</option>'; fs.disabled=true;
+    fa.innerHTML = '<option value="">Todas (incluir onde sou responsável)</option><option value="'+currentUser.area+'">'+currentUser.area+'</option>'; fa.disabled=false;
+    fs.innerHTML = '<option value="">Todos os setores</option><option value="'+currentUser.setor+'">'+currentUser.setor+'</option>'; fs.disabled=false;
   } else if(r==="coordenador"){
     fa.innerHTML = '<option value="'+currentUser.area+'">'+currentUser.area+'</option>'; fa.disabled=true;
     populateSetorFilter(currentUser.area);
@@ -2992,6 +3041,48 @@ function deleteNota(){
   renderNotas();
 }
 
+/* ====================== VIEW MODE ====================== */
+let _viewMode = false;
+
+function applyTaskModalMode(){
+  const modal = document.querySelector("#task-modal .modal");
+  const banner = document.getElementById("modo-banner");
+  const actions = document.querySelector("#task-modal .modal-actions");
+  if(_viewMode){
+    if(modal) modal.classList.add("task-modal-readonly");
+    if(banner) banner.classList.remove("hidden");
+    if(actions){
+      // Esconde botão Salvar, mantém só Fechar
+      const buttons = actions.querySelectorAll("button");
+      buttons.forEach(function(b){
+        if(b.textContent.trim()==="Salvar") b.style.display="none";
+        else if(b.textContent.trim()==="Cancelar") b.textContent="Fechar";
+      });
+    }
+  } else {
+    if(modal) modal.classList.remove("task-modal-readonly");
+    if(banner) banner.classList.add("hidden");
+    if(actions){
+      const buttons = actions.querySelectorAll("button");
+      buttons.forEach(function(b){
+        b.style.display="";
+        if(b.textContent.trim()==="Fechar") b.textContent="Cancelar";
+      });
+    }
+  }
+}
+
+function viewTask(id){
+  _viewMode = true;
+  editTask(id);
+  applyTaskModalMode();
+}
+
+function enableEditMode(){
+  _viewMode = false;
+  applyTaskModalMode();
+}
+
 /* ====================== MELHORIAS ====================== */
 let _taskComments = [];
 let _taskAnexos = [];
@@ -3160,6 +3251,99 @@ function renderSessoes(){
   wrap.innerHTML = "<strong>Últimas sessões:</strong><br>" + _taskSessoes.slice(-5).reverse().map(function(s){
     return "• " + formatDateTime(s.inicio) + " — " + formatDuration(s.duracao) + " (" + esc(s.autor||"") + ")";
   }).join("<br>");
+}
+
+/* ====================== AUSÊNCIAS ====================== */
+function getAusenciasInRange(year, month){
+  const list = loadAusencias();
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month+1, 0);
+  return list.filter(function(a){
+    if(!a.inicio || !a.fim) return false;
+    const ini = parseLocalDate(a.inicio);
+    const fim = parseLocalDate(a.fim);
+    if(!ini || !fim) return false;
+    return ini <= monthEnd && fim >= monthStart;
+  });
+}
+function isAbsentOnDate(dateStr, ausencias){
+  const d = parseLocalDate(dateStr);
+  if(!d) return [];
+  return ausencias.filter(function(a){
+    const ini = parseLocalDate(a.inicio);
+    const fim = parseLocalDate(a.fim);
+    return ini && fim && d >= ini && d <= fim;
+  });
+}
+function openAusenciaModal(){
+  if(!currentUser || !(currentUser.papel==="gerente" || (currentUser.papel==="coordenador" && currentUser.adminArea))){
+    alert("Apenas gerência ou coordenador admin pode registrar ausências.");
+    return;
+  }
+  document.getElementById("ausencia-modal-title").textContent = "Registrar ausência";
+  document.getElementById("aus-id").value = "";
+  document.getElementById("aus-tipo").value = "ferias";
+  document.getElementById("aus-inicio").value = "";
+  document.getElementById("aus-fim").value = "";
+  document.getElementById("aus-obs").value = "";
+  document.getElementById("aus-delete-btn").classList.add("hidden");
+  const sel = document.getElementById("aus-user");
+  sel.innerHTML = "";
+  let allowed = loadUsers();
+  if(currentUser.papel==="coordenador") allowed = allowed.filter(function(u){return u.area===currentUser.area;});
+  allowed.sort(function(a,b){return a.nome.localeCompare(b.nome);});
+  allowed.forEach(function(u){
+    const o = document.createElement("option");
+    o.value = u.id;
+    o.textContent = u.nome + " ("+roleLabel(u.papel)+(u.setor?" · "+u.setor:"")+")";
+    sel.appendChild(o);
+  });
+  document.getElementById("ausencia-modal").classList.remove("hidden");
+}
+function editAusencia(id){
+  const a = loadAusencias().find(function(x){return x.id===id;});
+  if(!a) return;
+  openAusenciaModal();
+  document.getElementById("ausencia-modal-title").textContent = "Editar ausência";
+  document.getElementById("aus-id").value = a.id;
+  document.getElementById("aus-user").value = a.userId;
+  document.getElementById("aus-tipo").value = a.tipo||"ferias";
+  document.getElementById("aus-inicio").value = a.inicio||"";
+  document.getElementById("aus-fim").value = a.fim||"";
+  document.getElementById("aus-obs").value = a.obs||"";
+  document.getElementById("aus-delete-btn").classList.remove("hidden");
+}
+function closeAusenciaModal(){ document.getElementById("ausencia-modal").classList.add("hidden"); }
+function saveAusencia(){
+  const userId = document.getElementById("aus-user").value;
+  const inicio = document.getElementById("aus-inicio").value;
+  const fim = document.getElementById("aus-fim").value;
+  if(!userId || !inicio || !fim){ alert("Preencha funcionário, data início e fim."); return; }
+  if(inicio > fim){ alert("Data início > data fim."); return; }
+  const u = loadUsers().find(function(x){return x.id===userId;});
+  if(!u){ alert("Usuário inválido."); return; }
+  const data = { userId, nome: u.nome, tipo: document.getElementById("aus-tipo").value, inicio, fim, obs: document.getElementById("aus-obs").value.trim() };
+  const id = document.getElementById("aus-id").value;
+  const arr = loadAusencias();
+  if(id){
+    const idx = arr.findIndex(function(a){return a.id===id;});
+    if(idx>=0) arr[idx] = Object.assign({}, arr[idx], data);
+  } else {
+    arr.push(Object.assign({id:crypto.randomUUID()}, data, {criado:new Date().toISOString(), criadoPor:currentUser.nome}));
+  }
+  saveAusencias(arr);
+  closeAusenciaModal();
+  renderAgenda();
+}
+function deleteAusencia(){
+  if(!confirm("Excluir esta ausência?")) return;
+  const id = document.getElementById("aus-id").value;
+  saveAusencias(loadAusencias().filter(function(a){return a.id!==id;}));
+  closeAusenciaModal();
+  renderAgenda();
+}
+function tipoAusenciaLabel(t){
+  return t==="ferias"?"Férias":t==="dayoff"?"Day off":t==="atestado"?"Atestado":"Ausência";
 }
 
 /* ====================== FERIADOS ====================== */
@@ -3449,7 +3633,7 @@ function renderTasks(){
     const histTxt = (t.historico&&t.historico.length>0)? '<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Última conclusão: '+formatDate(t.historico[t.historico.length-1].data)+'</div>' : "";
     const tagsHtml = (t.tags&&t.tags.length>0)? '<div style="margin-top:4px">'+t.tags.map(function(tg){return '<span class="tag-chip">🏷 '+esc(tg)+'</span>';}).join("")+'</div>' : "";
     return '<tr>'+
-      '<td><div style="font-weight:700">'+esc(t.titulo)+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+histTxt+'</td>'+
+      '<td><div style="font-weight:700" class="task-row-title" onclick="viewTask(\''+t.id+'\')">'+esc(t.titulo)+'</div>'+'<div style="margin-top:4px">'+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+histTxt+'</td>'+
       '<td><span class="area-tag">'+esc(t.area)+'</span><br><span style="font-size:13px">'+esc(t.setor)+'</span></td>'+
       (function(){
         const resps = getResponsaveis(t);
@@ -3567,14 +3751,14 @@ document.addEventListener("change", function(e){
 });
 function renderRespList(area, setor, selected){
   selected = selected||[];
-  const users = loadUsers().filter(function(u){return u.area && u.area===area;});
-  // Ordena: setor da atividade primeiro
+  const users = loadUsers().filter(function(u){
+    if(u.papel==="gerente" || u.papel==="cfo") return true;
+    return u.area && u.area===area;
+  });
   users.sort(function(a,b){
-    if(setor){
-      const aS = a.setor===setor?0:1;
-      const bS = b.setor===setor?0:1;
-      if(aS!==bS) return aS-bS;
-    }
+    const aOrder = a.papel==="gerente"?2:(a.papel==="cfo"?3:(a.setor===setor?0:1));
+    const bOrder = b.papel==="gerente"?2:(b.papel==="cfo"?3:(b.setor===setor?0:1));
+    if(aOrder!==bOrder) return aOrder-bOrder;
     return a.nome.localeCompare(b.nome);
   });
   const list = document.getElementById("task-resp-list");
@@ -3607,6 +3791,8 @@ function getResponsaveis(t){
 }
 
 function openTaskModal(){
+  _viewMode = false;
+  applyTaskModalMode();
   document.getElementById("modal-title").textContent = "Nova atividade";
   document.getElementById("task-id").value = "";
   document.getElementById("task-titulo").value = "";
@@ -3634,7 +3820,8 @@ function openTaskModal(){
 function editTask(id){
   const t = loadTasks().find(function(x){return x.id===id;});
   if(!t) return;
-  document.getElementById("modal-title").textContent = "Editar atividade";
+  if(!_viewMode){ applyTaskModalMode(); }
+  document.getElementById("modal-title").textContent = _viewMode ? ("👁 Visualizando: " + t.titulo) : "Editar atividade";
   document.getElementById("task-id").value = t.id;
   document.getElementById("task-titulo").value = t.titulo;
   document.getElementById("task-descricao").value = t.descricao||"";
@@ -3674,6 +3861,8 @@ function nextPrazo(prazoStr, periodicidade){
 }
 
 function closeTaskModal(){
+  _viewMode = false;
+  applyTaskModalMode();
   document.getElementById("task-modal").classList.add("hidden");
 }
 function saveTask(){
@@ -3798,7 +3987,10 @@ function renderAgenda(){
   document.getElementById("cal-month-label").textContent = monthNames[month] + " " + year;
   const grid = document.getElementById("cal-grid");
   let html = "";
-  ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(function(d){ html += '<div class="cal-day-name">'+d+'</div>'; });
+  ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(function(d, i){
+    const isWk = (i===0||i===6)?" weekend":"";
+    html += '<div class="cal-day-name'+isWk+'">'+d+'</div>';
+  });
   const firstDay = new Date(year, month, 1).getDay();
   const lastDate = new Date(year, month+1, 0).getDate();
   const prevLast = new Date(year, month, 0).getDate();
@@ -3812,6 +4004,7 @@ function renderAgenda(){
     byDate[o._data].push(o);
   });
   const holidaysMap = getAllHolidays(year);
+  const ausenciasMonth = getAusenciasInRange(year, month);
   for(let i=firstDay-1; i>=0; i--){
     html += '<div class="cal-day other-month"><div class="cal-day-num">'+(prevLast-i)+'</div></div>';
   }
@@ -3821,7 +4014,9 @@ function renderAgenda(){
     const isToday = dStr===todayStr;
     const items = byDate[dStr]||[];
     const hol = holidaysMap[dStr];
-    let dayClass = (isToday?"today":"");
+    const wkDay = d.getDay();
+    const isWeekend = (wkDay===0 || wkDay===6);
+    let dayClass = (isToday?"today":"")+(isWeekend?" weekend":"");
     let badgeHtml = "";
     if(hol){
       if(hol.tipo==="mun"||hol.tipo==="emp") dayClass += " holiday-mun";
@@ -3830,7 +4025,14 @@ function renderAgenda(){
       const bk = hol.tipo==="mun"||hol.tipo==="emp"?"mun":hol.tipo==="fac"?"fac":"";
       badgeHtml = '<div class="holiday-badge '+bk+'" title="'+esc(hol.nome)+'">'+esc(hol.nome)+'</div>';
     }
+    const ausenciasHoje = isAbsentOnDate(dStr, ausenciasMonth);
     let dayHtml = '<div class="cal-day '+dayClass+'"><div class="cal-day-num">'+day+(isToday?' <span style="color:var(--blue);font-size:10px">HOJE</span>':"")+'</div>'+badgeHtml;
+    ausenciasHoje.slice(0,2).forEach(function(a){
+      const fname = (a.nome||"").split(" ")[0];
+      const ico = a.tipo==="ferias"?"🏖️":a.tipo==="dayoff"?"☀️":a.tipo==="atestado"?"🏥":"📌";
+      dayHtml += '<div class="absence-card '+a.tipo+'" onclick="event.stopPropagation();editAusencia(\''+a.id+'\')" title="'+esc(tipoAusenciaLabel(a.tipo))+' - '+esc(a.nome)+'">'+ico+' '+esc(fname)+'</div>';
+    });
+    if(ausenciasHoje.length>2) dayHtml += '<div class="cal-more">+ '+(ausenciasHoje.length-2)+' ausência(s)</div>';
     const visible = items.slice(0,3);
     visible.forEach(function(t){
       const period = (t.periodicidade||"Avulsa").toLowerCase().replace("í","i");
