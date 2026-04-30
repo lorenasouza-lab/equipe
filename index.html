@@ -1558,23 +1558,23 @@ const LS_AUSENCIAS = "jt_ausencias_v1";
 function loadLS(key, def){ try{const v=JSON.parse(localStorage.getItem(key)); return v==null?def:v;}catch{return def;} }
 function saveLS(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 function loadUsers(){ return loadLS(LS_USERS, []); }
-function saveUsers(u){ saveLS(LS_USERS, u); if(_fbConnected) syncCollectionToFb("users", u); }
+function saveUsers(u){ _lastLocalSave[LS_USERS] = Date.now(); saveLS(LS_USERS, u); if(_fbConnected) syncCollectionToFb("users", u); }
 function loadTasks(){ return loadLS(LS_TASKS, []); }
-function saveTasks(t){ saveLS(LS_TASKS, t); if(_fbConnected) syncCollectionToFb("tasks", t); }
+function saveTasks(t){ _lastLocalSave[LS_TASKS] = Date.now(); saveLS(LS_TASKS, t); if(_fbConnected) syncCollectionToFb("tasks", t); }
 function loadMVV(){ return loadLS(LS_MVV, MVV_DEFAULT); }
 function loadSession(){ return loadLS(LS_SESSION, null); }
 function saveSession(s){ saveLS(LS_SESSION, s); }
 function clearSession(){ localStorage.removeItem(LS_SESSION); }
 function loadRotinas(){ return loadLS(LS_ROTINAS, []); }
-function saveRotinas(r){ saveLS(LS_ROTINAS, r); if(_fbConnected) syncCollectionToFb("rotinas", r); }
+function saveRotinas(r){ _lastLocalSave[LS_ROTINAS] = Date.now(); saveLS(LS_ROTINAS, r); if(_fbConnected) syncCollectionToFb("rotinas", r); }
 function loadProcessos(){ return loadLS(LS_PROCESSOS, []); }
-function saveProcessos(p){ saveLS(LS_PROCESSOS, p); if(_fbConnected) syncCollectionToFb("processos", p); }
+function saveProcessos(p){ _lastLocalSave[LS_PROCESSOS] = Date.now(); saveLS(LS_PROCESSOS, p); if(_fbConnected) syncCollectionToFb("processos", p); }
 function loadAvisos(){ return loadLS(LS_AVISOS, []); }
-function saveAvisos(a){ saveLS(LS_AVISOS, a); if(_fbConnected) syncCollectionToFb("avisos", a); }
+function saveAvisos(a){ _lastLocalSave[LS_AVISOS] = Date.now(); saveLS(LS_AVISOS, a); if(_fbConnected) syncCollectionToFb("avisos", a); }
 function loadNotas(){ return loadLS(LS_NOTAS, []); }
-function saveNotas(n){ saveLS(LS_NOTAS, n); if(_fbConnected) syncCollectionToFb("notas", n); }
+function saveNotas(n){ _lastLocalSave[LS_NOTAS] = Date.now(); saveLS(LS_NOTAS, n); if(_fbConnected) syncCollectionToFb("notas", n); }
 function loadAusencias(){ return loadLS(LS_AUSENCIAS, []); }
-function saveAusencias(a){ saveLS(LS_AUSENCIAS, a); if(_fbConnected) syncCollectionToFb("ausencias", a); }
+function saveAusencias(a){ _lastLocalSave[LS_AUSENCIAS] = Date.now(); saveLS(LS_AUSENCIAS, a); if(_fbConnected) syncCollectionToFb("ausencias", a); }
 
 let currentUser = null, currentArea = null;
 let chartSetor=null, chartStatus=null, chartStack=null, chartPessoas=null;
@@ -3849,8 +3849,20 @@ function editTask(id){
 
 function nextPrazo(prazoStr, periodicidade){
   if(!prazoStr || periodicidade==="Avulsa") return prazoStr;
-  const d = new Date(prazoStr);
-  if(periodicidade==="Diária") d.setDate(d.getDate()+1);
+  const d = parseLocalDate(prazoStr) || new Date(prazoStr);
+  if(periodicidade==="Diária"){
+    d.setDate(d.getDate()+1);
+    // Avança para o próximo dia útil (pula sáb, dom, feriados)
+    let safety = 0;
+    while(safety<14){
+      const wk = d.getDay();
+      const ds = d.toISOString().slice(0,10);
+      const hMap = getAllHolidays(d.getFullYear());
+      if(wk!==0 && wk!==6 && !hMap[ds]) break;
+      d.setDate(d.getDate()+1);
+      safety++;
+    }
+  }
   else if(periodicidade==="Semanal") d.setDate(d.getDate()+7);
   else if(periodicidade==="Quinzenal") d.setDate(d.getDate()+15);
   else if(periodicidade==="Mensal") d.setMonth(d.getMonth()+1);
@@ -3941,6 +3953,13 @@ function expandRecurrences(tasks, year, month){
   const result = [];
   const monthStart = new Date(year, month, 1);
   const monthEnd = new Date(year, month+1, 0);
+  const holidaysMap = getAllHolidays(year);
+  function isNonWorkDay(d){
+    const wk = d.getDay();
+    if(wk===0 || wk===6) return true;
+    const ds = d.toISOString().slice(0,10);
+    return !!holidaysMap[ds];
+  }
   tasks.forEach(function(t){
     if(!t.prazo) return;
     const period = t.periodicidade||"Avulsa";
@@ -3964,7 +3983,11 @@ function expandRecurrences(tasks, year, month){
     }
     safety = 0;
     while(cursor <= monthEnd && safety<400){
-      if(cursor>=monthStart) result.push(Object.assign({_data: cursor.toISOString().slice(0,10)}, t));
+      if(cursor>=monthStart){
+        // Para atividades Diárias: pula sábados, domingos e feriados
+        const skip = (period==="Diária") && isNonWorkDay(cursor);
+        if(!skip) result.push(Object.assign({_data: cursor.toISOString().slice(0,10)}, t));
+      }
       const nx = new Date(cursor);
       if(period==="Diária") nx.setDate(nx.getDate()+1);
       else if(period==="Semanal") nx.setDate(nx.getDate()+7);
@@ -4062,6 +4085,7 @@ const LS_FB_CONFIG = "jt_fb_config_v1";
 let _fbApp = null, _fbDb = null, _fbAuth = null, _fbConnected = false;
 let _fbUnsubs = [];
 let _suppressSync = false;
+const _lastLocalSave = {};
 
 function getFbConfig(){
   try { return JSON.parse(localStorage.getItem(LS_FB_CONFIG)); } catch { return null; }
@@ -4153,9 +4177,13 @@ function subscribeFirebase(){
   _fbUnsubs = [];
   // Helper: only overwrite local if cloud has data OR if local is also empty
   function safeSave(key, cloudArr, localLoader){
+    // Se houve modificação local recente (menos de 2s), NÃO sobrescreve com dados da nuvem
+    if(_lastLocalSave[key] && (Date.now() - _lastLocalSave[key]) < 2000){
+      console.log("Ignorando snapshot Firebase de", key, "- modificação local recente");
+      return true; // não força nova sincronização (já estamos no meio de uma)
+    }
     const localArr = localLoader();
     if(cloudArr.length === 0 && localArr.length > 0){
-      // Cloud vazio mas local tem dados: empurra local para cloud, NÃO sobrescreve local
       console.log("Cloud vazio em", key, "- empurrando dados locais");
       return false;
     }
