@@ -1074,6 +1074,9 @@ tbody tr:hover{background:#f8fafc}
           <select id="filter-tag" onchange="renderTasks()">
             <option value="">Todas as tags</option>
           </select>
+          <select id="filter-responsavel" onchange="renderTasks()">
+            <option value="">Todos os responsáveis</option>
+          </select>
           <input type="text" id="filter-search" placeholder="🔎 Buscar..." oninput="renderTasks()">
         </div>
         <div style="display:flex;gap:8px">
@@ -1146,6 +1149,9 @@ tbody tr:hover{background:#f8fafc}
             <option value="privada">Apenas privadas</option>
             <option value="setor">Compartilhadas com meu setor</option>
             <option value="area">Compartilhadas com minha área</option>
+          </select>
+          <select id="filter-nota-tag" onchange="renderNotas()">
+            <option value="">Todas as tags</option>
           </select>
           <input type="text" id="filter-nota-search" placeholder="🔎 Buscar..." oninput="renderNotas()">
         </div>
@@ -1348,6 +1354,7 @@ tbody tr:hover{background:#f8fafc}
       <div class="extras-tabs">
         <button type="button" class="extras-tab active" data-extra="coment" onclick="switchExtrasTab(event,'coment')">Comentarios (<span id="extras-count-c">0</span>)</button>
         <button type="button" class="extras-tab" data-extra="anex" onclick="switchExtrasTab(event,'anex')">Anexos (<span id="extras-count-a">0</span>)</button>
+        <button type="button" class="extras-tab" data-extra="cron" onclick="switchExtrasTab(event,'cron')">⏱️ Cronômetro</button>
         <button type="button" class="extras-tab" data-extra="timer" onclick="switchExtrasTab(event,'timer')">Status do Prazo</button>
       </div>
       <div id="extras-coment">
@@ -1361,6 +1368,17 @@ tbody tr:hover{background:#f8fafc}
         <input type="file" id="anex-input" accept="image/*" style="display:none" onchange="handleAnexUpload(this)">
         <button type="button" class="anexo-upload-btn" onclick="document.getElementById('anex-input').click()">Clique para enviar uma imagem</button>
         <div class="anexos-list" id="anexos-list"></div>
+      </div>
+      <div id="extras-cron" class="hidden">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px">
+          <div id="timer-display" class="timer-display">00:00:00</div>
+          <button type="button" id="timer-btn" class="timer-btn start" onclick="toggleTimer()">Iniciar</button>
+        </div>
+        <div id="timer-info-text" style="font-size:13px;color:var(--muted);margin-bottom:10px">Clique em Iniciar para começar a cronometrar</div>
+        <div id="timer-sessions" style="font-size:12.5px;color:var(--muted);line-height:1.7"></div>
+        <div style="margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:10px">
+          <strong>📌 Como funciona:</strong> O cronômetro registra quanto tempo você dedica a esta atividade. Inicie ao começar a trabalhar e pause quando parar — o tempo total e cada sessão ficam salvos junto com a atividade.
+        </div>
       </div>
       <div id="extras-timer" class="hidden">
         <div id="deadline-status"></div>
@@ -1416,6 +1434,13 @@ tbody tr:hover{background:#f8fafc}
       <textarea id="nota-conteudo" placeholder="Anote aqui livremente..." style="min-height:240px;font-family:Georgia,serif;font-size:14px;line-height:24px;background:#fffef5;background-image:linear-gradient(transparent 23px, rgba(245,158,11,.1) 24px);background-size:100% 24px;background-attachment:local"></textarea>
     </div>
     <div class="form-group">
+      <label>Tags (opcional)</label>
+      <div class="tag-input-area" id="nota-tag-area">
+        <input type="text" id="nota-tag-input" placeholder="Digite uma tag e pressione Enter (ex: Reunião, Ideia, Projeto X)" onkeydown="handleNotaTagKey(event)">
+      </div>
+      <div class="tag-suggest" id="nota-tag-suggest"></div>
+    </div>
+    <div class="form-group">
       <label>Compartilhar com</label>
       <select id="nota-scope">
         <option value="privada">🔒 Apenas eu (privada)</option>
@@ -1460,7 +1485,7 @@ tbody tr:hover{background:#f8fafc}
       <div class="form-group"><label>Para quem</label><select id="av-publico" onchange="updateAvisoSetorDest()">
         <option value="todos">Toda a empresa</option>
         <option value="Equipe Financeira">Apenas Equipe Financeira</option>
-        <option value="Equipe de Gente & Gestão">Apenas Gente &amp; Gestão</option>
+        <option value="Equipe de Gente &amp; Gestão">Apenas Gente &amp; Gestão</option>
         <option value="setor">Setor específico</option>
       </select></div>
       <div class="form-group"><label>Tipo</label><select id="av-tipo">
@@ -2937,6 +2962,22 @@ function populateTagFilter(){
   if(cur && tags.indexOf(cur)>=0) sel.value = cur;
 }
 
+function populateResponsavelFilter(){
+  const sel = document.getElementById("filter-responsavel");
+  if(!sel) return;
+  const cur = sel.value;
+  // Coleta todos os responsáveis que aparecem nas tarefas visíveis
+  const set = new Set();
+  visibleTasks().forEach(function(t){
+    getResponsaveis(t).forEach(function(r){ if(r) set.add(r); });
+  });
+  const responsaveis = Array.from(set).sort(function(a,b){return a.localeCompare(b);});
+  if(sel.dataset.lastResp === responsaveis.join("|")) return;
+  sel.dataset.lastResp = responsaveis.join("|");
+  sel.innerHTML = '<option value="">Todos os responsáveis</option>' + responsaveis.map(function(r){return '<option value="'+esc(r)+'">'+esc(r)+'</option>';}).join("");
+  if(cur && responsaveis.indexOf(cur)>=0) sel.value = cur;
+}
+
 function renderTaskTags(){
   const area = document.getElementById("task-tag-area");
   if(!area) return;
@@ -2982,6 +3023,73 @@ function refreshTagSuggestions(){
   wrap.innerHTML = '<span>Sugestões:</span>' + tags.slice(0,8).map(function(t){return '<button onclick="addTaskTag(\''+esc(t).replace(/\\/g,"\\\\").replace(/\'/g,"\\\'")+'\')">+ '+esc(t)+'</button>';}).join("");
 }
 
+/* ====================== TAGS DE ANOTAÇÕES ====================== */
+let _notaTags = [];
+
+function getAllNotaTags(){
+  const set = new Set();
+  loadNotas().forEach(function(n){
+    (n.tags||[]).forEach(function(t){ if(t) set.add(t); });
+  });
+  return Array.from(set).sort();
+}
+
+function renderNotaTags(){
+  const area = document.getElementById("nota-tag-area");
+  if(!area) return;
+  Array.from(area.querySelectorAll(".tag-chip")).forEach(function(el){el.remove();});
+  const input = document.getElementById("nota-tag-input");
+  _notaTags.forEach(function(tag){
+    const span = document.createElement("span");
+    span.className = "tag-chip removable";
+    span.innerHTML = "🏷 "+esc(tag)+'<span class="x" onclick="removeNotaTag(\''+esc(tag).replace(/\\/g,"\\\\").replace(/\'/g,"\\\'")+'\')">×</span>';
+    area.insertBefore(span, input);
+  });
+  refreshNotaTagSuggestions();
+}
+
+function addNotaTag(tag){
+  tag = (tag||"").trim();
+  if(!tag) return;
+  if(_notaTags.indexOf(tag)<0) _notaTags.push(tag);
+  renderNotaTags();
+  document.getElementById("nota-tag-input").value = "";
+}
+
+function removeNotaTag(tag){
+  _notaTags = _notaTags.filter(function(t){return t!==tag;});
+  renderNotaTags();
+}
+
+function handleNotaTagKey(e){
+  if(e.key === "Enter" || e.key === "," || e.key === ";"){
+    e.preventDefault();
+    addNotaTag(e.target.value);
+  } else if(e.key === "Backspace" && !e.target.value && _notaTags.length>0){
+    _notaTags.pop();
+    renderNotaTags();
+  }
+}
+
+function refreshNotaTagSuggestions(){
+  const wrap = document.getElementById("nota-tag-suggest");
+  if(!wrap) return;
+  const tags = getAllNotaTags().filter(function(t){return _notaTags.indexOf(t)<0;});
+  if(tags.length===0){ wrap.innerHTML = ""; return; }
+  wrap.innerHTML = '<span>Sugestões:</span>' + tags.slice(0,8).map(function(t){return '<button onclick="addNotaTag(\''+esc(t).replace(/\\/g,"\\\\").replace(/\'/g,"\\\'")+'\')">+ '+esc(t)+'</button>';}).join("");
+}
+
+function populateNotaTagFilter(){
+  const sel = document.getElementById("filter-nota-tag");
+  if(!sel) return;
+  const cur = sel.value;
+  const tags = getAllNotaTags();
+  if(sel.dataset.lastTags === tags.join("|")) return;
+  sel.dataset.lastTags = tags.join("|");
+  sel.innerHTML = '<option value="">Todas as tags</option>' + tags.map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>';}).join("");
+  if(cur && tags.indexOf(cur)>=0) sel.value = cur;
+}
+
 /* ====================== NOTAS ====================== */
 function visibleNotas(){
   const all = loadNotas();
@@ -3005,10 +3113,13 @@ function renderNotas(){
   const list = document.getElementById("notas-list");
   if(!list) return;
   const fScope = (document.getElementById("filter-nota-scope")||{}).value||"";
+  const fTag = (document.getElementById("filter-nota-tag")||{}).value||"";
   const fq = ((document.getElementById("filter-nota-search")||{}).value||"").toLowerCase();
   let arr = visibleNotas();
   if(fScope) arr = arr.filter(function(n){return (n.scope||"privada")===fScope;});
-  if(fq) arr = arr.filter(function(n){return (n.titulo+" "+(n.conteudo||"")).toLowerCase().includes(fq);});
+  if(fTag) arr = arr.filter(function(n){return (n.tags||[]).indexOf(fTag)>=0;});
+  if(fq) arr = arr.filter(function(n){return (n.titulo+" "+(n.conteudo||"")+" "+((n.tags||[]).join(" "))).toLowerCase().includes(fq);});
+  populateNotaTagFilter();
   if(arr.length===0){
     list.innerHTML = '<div class="nota-empty">📓 Sem anotações ainda. Clique em "+ Nova anotação" e comece a usar este sistema como seu bloco de notas digital.<br><br><small>🌱 Cada anotação digital evita uma folha de papel.</small></div>';
     updatePaperCounter();
@@ -3022,6 +3133,7 @@ function renderNotas(){
     const scopeIcon = scope==="privada"?"🔒":scope==="setor"?"👥":"🏢";
     const scopeLabel = scope==="privada"?"Privada":scope==="setor"?"Setor":"Área";
     const isLong = (n.conteudo||"").length > 200;
+    const tagsHtml = (n.tags&&n.tags.length>0)? '<div style="margin-top:6px">'+n.tags.map(function(tg){return '<span class="tag-chip">🏷 '+esc(tg)+'</span>';}).join("")+'</div>' : "";
     return '<div class="nota-card '+klass+'">'+
       '<div class="nota-head">'+
         '<div>'+
@@ -3035,6 +3147,7 @@ function renderNotas(){
       '</div>'+
       '<div class="nota-content '+(isLong?"collapsed":"")+'" id="nota-c-'+n.id+'">'+esc(n.conteudo||"")+'</div>'+
       (isLong?'<span class="nota-toggle" onclick="toggleNota(\''+n.id+'\')">Ver mais ▼</span>':"")+
+      tagsHtml+
       (own?'<div class="nota-actions"><button class="btn btn-secondary btn-sm" onclick="editNota(\''+n.id+'\')">✏️ Editar</button></div>':"")+
     '</div>';
   }).join("");
@@ -3065,6 +3178,8 @@ function openNotaModal(){
   document.getElementById("nota-titulo").value = "";
   document.getElementById("nota-conteudo").value = "";
   document.getElementById("nota-scope").value = "privada";
+  _notaTags = [];
+  renderNotaTags();
   document.getElementById("nota-delete-btn").classList.add("hidden");
   document.getElementById("nota-modal").classList.remove("hidden");
 }
@@ -3078,6 +3193,8 @@ function editNota(id){
   document.getElementById("nota-titulo").value = n.titulo;
   document.getElementById("nota-conteudo").value = n.conteudo||"";
   document.getElementById("nota-scope").value = n.scope||"privada";
+  _notaTags = (n.tags||[]).slice();
+  renderNotaTags();
   document.getElementById("nota-delete-btn").classList.remove("hidden");
   document.getElementById("nota-modal").classList.remove("hidden");
 }
@@ -3091,6 +3208,7 @@ function saveNota(){
     titulo,
     conteudo: document.getElementById("nota-conteudo").value,
     scope: document.getElementById("nota-scope").value,
+    tags: _notaTags.slice(),
     atualizado: new Date().toISOString()
   };
   if(data.scope==="setor" || data.scope==="area"){
@@ -3176,6 +3294,7 @@ function switchExtrasTab(ev, tab){
   ev.target.classList.add("active");
   document.getElementById("extras-coment").classList.toggle("hidden", tab!=="coment");
   document.getElementById("extras-anex").classList.toggle("hidden", tab!=="anex");
+  document.getElementById("extras-cron").classList.toggle("hidden", tab!=="cron");
   document.getElementById("extras-timer").classList.toggle("hidden", tab!=="timer");
 }
 
@@ -3186,7 +3305,7 @@ function loadTaskExtras(t){
   _taskTempoTotal = t && t.tempoTotal? t.tempoTotal : 0;
   _taskSessoes = t && t.sessoesTempo? t.sessoesTempo.slice() : [];
   document.getElementById("task-extras").classList.toggle("hidden", !t);
-  if(t){renderComments(); renderAnexos(); updateDeadlineStatus(t);}
+  if(t){renderComments(); renderAnexos(); updateDeadlineStatus(t); updateTimerDisplay(); renderSessoes();}
 }
 
 function renderComments(){
@@ -3708,8 +3827,8 @@ function criarReuniaoChat(){
   if(!_currentRoom) return;
   const titulo = prompt("Título da reunião:");
   if(!titulo) return;
-  const meetId = "JustTravel-"+Math.random().toString(36).substring(2,10);
-  const link = "https://meet.jit.si/"+meetId;
+  // Google Meet: meet.google.com/new cria uma sala nova instantaneamente
+  const link = "https://meet.google.com/new";
   const msg = {
     id: crypto.randomUUID(),
     roomId: _currentRoom,
@@ -3752,7 +3871,6 @@ function openReuniaoModal(dataDefault){
     '<div class="form-group"><label>Duração (minutos)</label><input type="number" id="reu-dur" value="30" min="15" step="15"></div>'+
     '<div class="form-group"><label>Participantes</label><div id="reu-parts" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px"></div></div>'+
     '<div class="modal-actions">'+
-      '<button id="reu-delete-btn" class="btn btn-danger hidden" onclick="deleteReuniao()">Excluir</button>'+
       '<button class="btn btn-secondary" onclick="document.getElementById(\'reuniao-modal\').remove()">Cancelar</button>'+
       '<button class="btn btn-primary" onclick="saveReuniao()">Agendar</button>'+
     '</div>'+
@@ -3778,7 +3896,7 @@ function saveReuniao(){
   const participantes = Array.prototype.map.call(checks, function(c){return c.value;});
   if(!participantes.includes(currentUser.id)) participantes.push(currentUser.id);
   const id = document.getElementById("reu-id").value;
-  const meetId = "JustTravel-"+Math.random().toString(36).substring(2,10);
+  // Google Meet: link gerado automaticamente ao acessar (https://meet.google.com/new cria sala instantânea)
   const reuniao = {
     id: id || crypto.randomUUID(),
     titulo: titulo,
@@ -3787,7 +3905,7 @@ function saveReuniao(){
     hora: hora,
     duracao: dur,
     participantes: participantes,
-    meetLink: id? loadReunioes().find(function(r){return r.id===id;}).meetLink : "https://meet.jit.si/"+meetId,
+    meetLink: id? loadReunioes().find(function(r){return r.id===id;}).meetLink : "https://meet.google.com/new",
     criadoPor: currentUser.id,
     criadoPorNome: currentUser.nome,
     criado: new Date().toISOString()
@@ -4045,12 +4163,6 @@ function renderHolidaysOfMonth(year, month){
   }).join("");
 }
 
-function goHome(){
-  if(confirm("Voltar à página inicial? Você terá que escolher seu nome e digitar a senha novamente.")){
-    doLogout();
-  }
-}
-
 function autoMarkOverdue(){
   const tasks = loadTasks();
   const today = new Date(); today.setHours(0,0,0,0);
@@ -4095,7 +4207,10 @@ function renderTasks(){
   if(fp) tasks = tasks.filter(function(t){return (t.prioridade||"Média")===fp;});
   const fT = (document.getElementById("filter-tag")||{}).value||"";
   if(fT) tasks = tasks.filter(function(t){return (t.tags||[]).indexOf(fT)>=0;});
+  const fResp = (document.getElementById("filter-responsavel")||{}).value||"";
+  if(fResp) tasks = tasks.filter(function(t){return getResponsaveis(t).indexOf(fResp)>=0;});
   populateTagFilter();
+  populateResponsavelFilter();
   if(fq) tasks = tasks.filter(function(t){return (t.titulo+" "+(t.descricao||"")+" "+getResponsaveis(t).join(" ")).toLowerCase().includes(fq);});
   renderQuickStats(tasks);
   const tbody = document.getElementById("tasks-body");
@@ -4367,6 +4482,7 @@ function nextPrazo(prazoStr, periodicidade){
 }
 
 function closeTaskModal(){
+  if(_timerInterval) stopTimerInternal();
   _viewMode = false;
   applyTaskModalMode();
   document.getElementById("task-modal").classList.add("hidden");
@@ -4375,6 +4491,8 @@ function saveTask(){
   const id = document.getElementById("task-id").value;
   const titulo = document.getElementById("task-titulo").value.trim();
   if(!titulo){ alert("Informe o título."); return; }
+  // Se cronômetro estiver rodando, encerra a sessão atual antes de salvar
+  if(_timerInterval) stopTimerInternal();
   const data = {
     titulo,
     descricao: document.getElementById("task-descricao").value.trim(),
@@ -4387,7 +4505,9 @@ function saveTask(){
     prioridade: document.getElementById("task-prioridade").value,
     tags: _taskTags.slice(),
     comentarios: _taskComments.slice(),
-    anexos: _taskAnexos.slice()
+    anexos: _taskAnexos.slice(),
+    tempoTotal: _taskTempoTotal||0,
+    sessoesTempo: _taskSessoes.slice()
   };
   const tasks = loadTasks();
   const today = new Date().toISOString().slice(0,10);
@@ -4658,6 +4778,9 @@ async function syncLocalToCloudIfNeeded(){
       const localProcessos = loadProcessos();
       const localAvisos = loadAvisos();
       const localNotas = loadNotas();
+      const localMensagens = loadMensagens();
+      const localReunioes = loadReunioes();
+      const localAusencias = loadAusencias();
       if(localUsers.length>0){
         await syncCollectionToFb("users", localUsers);
         await syncCollectionToFb("tasks", localTasks);
@@ -4665,6 +4788,9 @@ async function syncLocalToCloudIfNeeded(){
         await syncCollectionToFb("processos", localProcessos);
         await syncCollectionToFb("avisos", localAvisos);
         await syncCollectionToFb("notas", localNotas);
+        await syncCollectionToFb("mensagens", localMensagens);
+        await syncCollectionToFb("reunioes", localReunioes);
+        await syncCollectionToFb("ausencias", localAusencias);
         await syncMVVToFb(loadMVV());
         console.log("✓ Dados locais sincronizados com a nuvem");
       }
@@ -4747,6 +4873,33 @@ function subscribeFirebase(){
     const updated = safeSave(LS_NOTAS, arr, loadNotas);
     if(!updated){ syncCollectionToFb("notas", loadNotas()); return; }
     if(currentUser){ renderNotas(); }
+  }));
+  // Mensagens (chat) - ESSENCIAL para que mensagens cheguem em tempo real aos outros usuários
+  _fbUnsubs.push(_fbDb.collection("mensagens").onSnapshot(function(snap){
+    if(_suppressSync) return;
+    const arr = snap.docs.map(function(d){return d.data();});
+    const updated = safeSave(LS_MENSAGENS, arr, loadMensagens);
+    if(!updated){ syncCollectionToFb("mensagens", loadMensagens()); return; }
+    if(currentUser && !document.getElementById("view-chat").classList.contains("hidden")){
+      renderChatRooms();
+      if(_currentRoom) renderChatMessages();
+    }
+  }));
+  // Reuniões
+  _fbUnsubs.push(_fbDb.collection("reunioes").onSnapshot(function(snap){
+    if(_suppressSync) return;
+    const arr = snap.docs.map(function(d){return d.data();});
+    const updated = safeSave(LS_REUNIOES, arr, loadReunioes);
+    if(!updated){ syncCollectionToFb("reunioes", loadReunioes()); return; }
+    if(currentUser && !document.getElementById("view-agenda").classList.contains("hidden")) renderAgenda();
+  }));
+  // Ausências
+  _fbUnsubs.push(_fbDb.collection("ausencias").onSnapshot(function(snap){
+    if(_suppressSync) return;
+    const arr = snap.docs.map(function(d){return d.data();});
+    const updated = safeSave(LS_AUSENCIAS, arr, loadAusencias);
+    if(!updated){ syncCollectionToFb("ausencias", loadAusencias()); return; }
+    if(currentUser && !document.getElementById("view-agenda").classList.contains("hidden")) renderAgenda();
   }));
   // MVV (single doc)
   _fbUnsubs.push(_fbDb.collection("config").doc("mvv").onSnapshot(function(doc){
