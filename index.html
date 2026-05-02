@@ -1077,6 +1077,21 @@ tbody tr:hover{background:#f8fafc}
           <select id="filter-responsavel" onchange="renderTasks()">
             <option value="">Todos os responsáveis</option>
           </select>
+          <select id="filter-prazo" onchange="renderTasks()">
+            <option value="">Todos os prazos</option>
+            <option value="atrasadas">⚠️ Atrasadas</option>
+            <option value="hoje">📅 Hoje</option>
+            <option value="amanha">➡️ Amanhã</option>
+            <option value="semana">📆 Esta semana</option>
+            <option value="prox_semana">📆 Próxima semana</option>
+            <option value="sem_prazo">⏳ Sem prazo definido</option>
+          </select>
+          <select id="filter-criado" onchange="renderTasks()">
+            <option value="">Qualquer criação</option>
+            <option value="hoje">Criadas hoje</option>
+            <option value="semana">Criadas esta semana</option>
+            <option value="mes">Criadas este mês</option>
+          </select>
           <input type="text" id="filter-search" placeholder="🔎 Buscar..." oninput="renderTasks()">
         </div>
         <div style="display:flex;gap:8px">
@@ -4209,6 +4224,46 @@ function renderTasks(){
   if(fT) tasks = tasks.filter(function(t){return (t.tags||[]).indexOf(fT)>=0;});
   const fResp = (document.getElementById("filter-responsavel")||{}).value||"";
   if(fResp) tasks = tasks.filter(function(t){return getResponsaveis(t).indexOf(fResp)>=0;});
+  // Filtro por período do prazo
+  const fPrazo = (document.getElementById("filter-prazo")||{}).value||"";
+  if(fPrazo){
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const amanha = new Date(hoje); amanha.setDate(amanha.getDate()+1);
+    const fimSem = new Date(hoje); fimSem.setDate(fimSem.getDate() + (6 - hoje.getDay()) + (hoje.getDay()===0?-6:1));
+    fimSem.setHours(23,59,59,999);
+    const inicioProxSem = new Date(fimSem); inicioProxSem.setDate(inicioProxSem.getDate()+1); inicioProxSem.setHours(0,0,0,0);
+    const fimProxSem = new Date(inicioProxSem); fimProxSem.setDate(fimProxSem.getDate()+6); fimProxSem.setHours(23,59,59,999);
+    tasks = tasks.filter(function(t){
+      if(fPrazo==="sem_prazo") return !t.prazo;
+      if(fPrazo==="atrasadas") return t.status==="Atrasada";
+      if(!t.prazo) return false;
+      const pd = parseLocalDate(t.prazo); if(!pd) return false;
+      pd.setHours(0,0,0,0);
+      if(fPrazo==="hoje") return pd.getTime()===hoje.getTime();
+      if(fPrazo==="amanha") return pd.getTime()===amanha.getTime();
+      if(fPrazo==="semana") return pd>=hoje && pd<=fimSem;
+      if(fPrazo==="prox_semana") return pd>=inicioProxSem && pd<=fimProxSem;
+      return true;
+    });
+  }
+  // Filtro por data de criação
+  const fCriado = (document.getElementById("filter-criado")||{}).value||"";
+  if(fCriado){
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const fimSem = new Date(hoje); fimSem.setDate(fimSem.getDate() + (6 - hoje.getDay()) + (hoje.getDay()===0?-6:1));
+    fimSem.setHours(23,59,59,999);
+    const inicioSem = new Date(fimSem); inicioSem.setDate(inicioSem.getDate()-6); inicioSem.setHours(0,0,0,0);
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    tasks = tasks.filter(function(t){
+      if(!t.criado) return false;
+      const cd = new Date(t.criado);
+      if(isNaN(cd.getTime())) return false;
+      if(fCriado==="hoje"){ const c2=new Date(cd); c2.setHours(0,0,0,0); return c2.getTime()===hoje.getTime(); }
+      if(fCriado==="semana") return cd>=inicioSem && cd<=fimSem;
+      if(fCriado==="mes") return cd>=inicioMes;
+      return true;
+    });
+  }
   populateTagFilter();
   populateResponsavelFilter();
   if(fq) tasks = tasks.filter(function(t){return (t.titulo+" "+(t.descricao||"")+" "+getResponsaveis(t).join(" ")).toLowerCase().includes(fq);});
@@ -4249,9 +4304,10 @@ function renderTasks(){
     const prioKey = prio.toLowerCase().replace("é","e");
     const prioTag = '<span class="priority-tag '+prioKey+'">'+prio+'</span>';
     const histTxt = (t.historico&&t.historico.length>0)? '<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Última conclusão: '+formatDate(t.historico[t.historico.length-1].data)+'</div>' : "";
+    const criadoTxt = t.criado? '<div style="font-size:11px;color:var(--muted);margin-top:3px">📌 Criada em '+formatDate(t.criado.slice(0,10))+'</div>' : "";
     const tagsHtml = (t.tags&&t.tags.length>0)? '<div style="margin-top:4px">'+t.tags.map(function(tg){return '<span class="tag-chip">🏷 '+esc(tg)+'</span>';}).join("")+'</div>' : "";
     return '<tr>'+
-      '<td><div style="font-weight:700" class="task-row-title" onclick="viewTask(\''+t.id+'\')">'+esc(t.titulo)+'</div>'+'<div style="margin-top:4px">'+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+histTxt+'</td>'+
+      '<td><div style="font-weight:700" class="task-row-title" onclick="viewTask(\''+t.id+'\')">'+esc(t.titulo)+'</div>'+'<div style="margin-top:4px">'+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+criadoTxt+histTxt+'</td>'+
       '<td><span class="area-tag">'+esc(t.area)+'</span><br><span style="font-size:13px">'+esc(t.setor)+'</span></td>'+
       (function(){
         const resps = getResponsaveis(t);
@@ -4442,6 +4498,11 @@ function editTask(id){
   if(!t) return;
   if(!_viewMode){ applyTaskModalMode(); }
   document.getElementById("modal-title").textContent = _viewMode ? ("👁 Visualizando: " + t.titulo) : "Editar atividade";
+  // Anexa data de criação ao título
+  if(t.criado){
+    const cd = formatDate(t.criado.slice(0,10));
+    document.getElementById("modal-title").textContent += "  ·  📌 Criada em " + cd;
+  }
   document.getElementById("task-id").value = t.id;
   document.getElementById("task-titulo").value = t.titulo;
   document.getElementById("task-descricao").value = t.descricao||"";
