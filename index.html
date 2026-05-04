@@ -1176,7 +1176,10 @@ tbody tr:hover{background:#f8fafc}
               <h3 id="chat-room-title">Selecione um canal</h3>
               <div class="header-info" id="chat-room-info"></div>
             </div>
-            <button id="chat-meet-btn" class="btn-meet hidden" onclick="criarReuniaoChat()">📞 Iniciar reunião</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button id="btn-notif-toggle" onclick="toggleNotif()" style="background:transparent;border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)" title="Notificações">🔔 Ativar som</button>
+              <button id="chat-meet-btn" class="btn-meet hidden" onclick="criarReuniaoChat()">📞 Iniciar reunião</button>
+            </div>
           </div>
           <div class="chat-messages" id="chat-messages-list">
             <div class="chat-empty">Selecione um canal ao lado para começar a conversar.</div>
@@ -1920,6 +1923,9 @@ function startApp(){
 
   document.getElementById("hero-title").textContent = "Olá, "+currentUser.nome.split(" ")[0]+"! 👋";
 
+  // Inicializa estado do botão de notificações
+  setTimeout(updateNotifBtn, 0);
+
   const r = currentUser.papel;
   document.getElementById("tab-atividades").classList.toggle("hidden", r==="cfo");
   document.getElementById("tab-processos").classList.toggle("hidden", r==="cfo");
@@ -2081,6 +2087,110 @@ function saveMVVData(){
   closeMVVModal();
   renderApresentacao();
 }
+
+/* ============ NOTIFICAÇÕES ============ */
+const LS_NOTIF_PREF = "jt_notif_pref_v1";
+let _seenMsgIds = null;
+let _seenReuIds = null;
+let _seenTaskIds = null;
+
+function getNotifPref(){
+  const v = localStorage.getItem(LS_NOTIF_PREF);
+  return v === null ? "on" : v;
+}
+function setNotifPref(v){
+  localStorage.setItem(LS_NOTIF_PREF, v);
+  updateNotifBtn();
+}
+function updateNotifBtn(){
+  const btn = document.getElementById("btn-notif-toggle");
+  if(!btn) return;
+  const pref = getNotifPref();
+  const supported = (typeof Notification !== "undefined");
+  const perm = supported ? Notification.permission : "denied";
+  if(!supported){
+    btn.textContent = "🔕 Não suportado";
+    btn.title = "Este navegador não suporta notificações.";
+    btn.disabled = true;
+    return;
+  }
+  if(pref === "off"){
+    btn.textContent = "🔕 Som desligado";
+    btn.title = "Notificações silenciadas. Clique para ligar.";
+  } else if(perm === "granted"){
+    btn.textContent = "🔔 Som ligado";
+    btn.title = "Notificações ativas. Clique para silenciar.";
+  } else if(perm === "denied"){
+    btn.textContent = "🔕 Som bloqueado";
+    btn.title = "Você bloqueou notificações para este site no navegador. Libere nas configurações do site (cadeado ao lado da URL).";
+  } else {
+    btn.textContent = "🔔 Ativar som";
+    btn.title = "Clique para ativar as notificações sonoras.";
+  }
+}
+function toggleNotif(){
+  if(typeof Notification === "undefined") return;
+  const pref = getNotifPref();
+  if(pref === "off"){
+    setNotifPref("on");
+    pedirPermissaoNotif();
+    return;
+  }
+  if(Notification.permission === "default"){
+    pedirPermissaoNotif();
+    return;
+  }
+  if(Notification.permission === "granted"){
+    setNotifPref("off");
+    return;
+  }
+  alert("As notificações estão bloqueadas pelo navegador. Para liberar:\n\n1. Clique no cadeado ao lado da URL\n2. Em 'Notificações', escolha 'Permitir'\n3. Recarregue a página");
+}
+function pedirPermissaoNotif(){
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission === "default"){
+    Notification.requestPermission().then(function(){ updateNotifBtn(); });
+  } else {
+    updateNotifBtn();
+  }
+}
+function notificar(titulo, corpo, opts){
+  if(getNotifPref() === "off") return;
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission !== "granted") return;
+  // Não notifica a aba que está em foco com a tela do chat aberta (evita ruído)
+  const chatVisivel = document.hasFocus() && document.getElementById("view-chat") && !document.getElementById("view-chat").classList.contains("hidden");
+  if(chatVisivel && opts && opts.tag && opts.tag.indexOf("chat-")===0) return;
+  try {
+    const n = new Notification(titulo, Object.assign({
+      body: corpo || "",
+      icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><polygon points='20,20 85,50 20,80 20,62 60,50 20,38' fill='%231DA9F0'/></svg>",
+      tag: (opts && opts.tag) || "jt-notif",
+      renotify: true,
+      silent: false
+    }, opts || {}));
+    n.onclick = function(){ window.focus(); n.close(); };
+    setTimeout(function(){ try{ n.close(); }catch(e){} }, 7000);
+  } catch(e){ console.warn("Notif error:", e); }
+}
+function userInRoom(user, roomId){
+  if(!user || !roomId) return false;
+  if(roomId === "geral") return true;
+  if(roomId.indexOf("area-") === 0){
+    if(user.papel === "gerente") return true;
+    return user.area === roomId.substring(5);
+  }
+  if(roomId.indexOf("setor-") === 0){
+    const partes = roomId.substring(6).split("|");
+    if(user.papel === "gerente") return true;
+    return user.area === partes[0] && user.setor === partes[1];
+  }
+  if(roomId.indexOf("dm-") === 0){
+    return roomId.substring(3).split("_").indexOf(user.id) >= 0;
+  }
+  return false;
+}
+/* ====================================== */
 
 function renderOrg(){
   const users = loadUsers();
@@ -4713,11 +4823,73 @@ function subscribeFirebase(){
     const updated = safeSave(LS_TASKS, arr, loadTasks);
     if(!updated){ syncCollectionToFb("tasks", loadTasks()); return; }
     if(currentUser){
+      // Notifica novas atividades atribuídas ao usuário
+      if(_seenTaskIds){
+        arr.forEach(function(t){
+          if(_seenTaskIds.has(t.id)) return;
+          if(t.criadoPor === currentUser.nome) return;
+          const resps = (typeof getResponsaveis === "function") ? getResponsaveis(t) : (t.responsaveis || (t.responsavel?[t.responsavel]:[]));
+          if(resps.indexOf(currentUser.nome) >= 0){
+            notificar("Nova atividade pra você", (t.titulo || "Sem título") + (t.prazo ? " · prazo " + t.prazo : ""), {tag:"task-"+t.id});
+          }
+        });
+      }
+      _seenTaskIds = new Set(arr.map(function(t){return t.id;}));
       renderTasks();
       if(!document.getElementById("view-agenda").classList.contains("hidden")) renderAgenda();
       if(!document.getElementById("view-dashboard").classList.contains("hidden")) renderDashboard();
       if(!document.getElementById("view-apresentacao").classList.contains("hidden")) renderApresentacao();
     }
+  }));
+  // Mensagens (chat)
+  _fbUnsubs.push(_fbDb.collection("mensagens").onSnapshot(function(snap){
+    if(_suppressSync) return;
+    const arr = snap.docs.map(function(d){return d.data();});
+    const updated = safeSave(LS_MENSAGENS, arr, loadMensagens);
+    if(!updated){ syncCollectionToFb("mensagens", loadMensagens()); return; }
+    if(currentUser){
+      if(_seenMsgIds){
+        arr.forEach(function(m){
+          if(_seenMsgIds.has(m.id)) return;
+          if(m.autorId === currentUser.id) return;
+          if(!userInRoom(currentUser, m.roomId)) return;
+          const txt = (m.texto || "").substring(0,140);
+          notificar("💬 " + (m.autorNome || "Mensagem nova"), txt, {tag:"chat-"+m.roomId});
+        });
+      }
+      _seenMsgIds = new Set(arr.map(function(m){return m.id;}));
+      if(typeof renderChatRooms === "function") renderChatRooms();
+      const chatView = document.getElementById("view-chat");
+      if(chatView && !chatView.classList.contains("hidden") && typeof renderChatMessages === "function") renderChatMessages();
+    }
+  }));
+  // Reuniões
+  _fbUnsubs.push(_fbDb.collection("reunioes").onSnapshot(function(snap){
+    if(_suppressSync) return;
+    const arr = snap.docs.map(function(d){return d.data();});
+    const updated = safeSave(LS_REUNIOES, arr, loadReunioes);
+    if(!updated){ syncCollectionToFb("reunioes", loadReunioes()); return; }
+    if(currentUser){
+      if(_seenReuIds){
+        arr.forEach(function(r){
+          if(_seenReuIds.has(r.id)) return;
+          if(r.criadoPor === currentUser.id) return;
+          const corpo = (r.titulo || "Sem título") + " · " + (r.data || "") + (r.hora ? " às " + r.hora : "");
+          notificar("📞 Reunião agendada por " + (r.criadoPorNome || "alguém"), corpo, {tag:"reu-"+r.id});
+        });
+      }
+      _seenReuIds = new Set(arr.map(function(r){return r.id;}));
+      const agendaView = document.getElementById("view-agenda");
+      if(agendaView && !agendaView.classList.contains("hidden") && typeof renderAgenda === "function") renderAgenda();
+    }
+  }));
+  // Ausências
+  _fbUnsubs.push(_fbDb.collection("ausencias").onSnapshot(function(snap){
+    if(_suppressSync) return;
+    const arr = snap.docs.map(function(d){return d.data();});
+    const updated = safeSave(LS_AUSENCIAS, arr, loadAusencias);
+    if(!updated){ syncCollectionToFb("ausencias", loadAusencias()); return; }
+    if(currentUser && typeof renderAusencias === "function") renderAusencias();
   }));
   // Rotinas
   _fbUnsubs.push(_fbDb.collection("rotinas").onSnapshot(function(snap){
