@@ -1071,6 +1071,13 @@ tbody tr:hover{background:#f8fafc}
             <option value="">Todas prioridades</option>
             <option>Baixa</option><option>Média</option><option>Importante</option><option>Urgente</option>
           </select>
+          <select id="filter-periodicidade" onchange="renderTasks()">
+            <option value="">Todas periodicidades</option>
+            <option>Avulsa</option><option>Diária</option><option>Semanal</option><option>Quinzenal</option><option>Mensal</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>
+          </select>
+          <select id="filter-responsavel" onchange="renderTasks()">
+            <option value="">Todos os responsáveis</option>
+          </select>
           <select id="filter-tag" onchange="renderTasks()">
             <option value="">Todas as tags</option>
           </select>
@@ -1081,9 +1088,17 @@ tbody tr:hover{background:#f8fafc}
           <button class="btn btn-primary" onclick="openTaskModal()">+ Nova atividade</button>
         </div>
       </div>
+      <div id="bulk-actions-bar" style="display:none;background:rgba(29,169,240,.1);border:1px solid var(--blue);padding:10px 14px;border-radius:8px;margin-bottom:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <span id="bulk-count" style="font-weight:700;color:var(--blue-dark)">0 atividades selecionadas</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="openBulkEditModal()">✏️ Editar selecionadas</button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDeleteTasks()">🗑️ Excluir selecionadas</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearTaskSelection()">Limpar</button>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Atividade</th><th>Área / Setor</th><th>Responsável</th><th>Prazo</th><th>Status</th><th>Ações</th></tr></thead>
+          <thead><tr><th style="width:36px"><input type="checkbox" id="select-all-tasks" onclick="toggleAllTasksSelection(this.checked)" title="Selecionar todas"></th><th>Atividade</th><th>Área / Setor</th><th>Responsável</th><th>Prazo</th><th>Status</th><th>Ações</th></tr></thead>
           <tbody id="tasks-body"></tbody>
         </table>
       </div>
@@ -1298,6 +1313,47 @@ tbody tr:hover{background:#f8fafc}
       <button id="hol-delete-btn" class="btn btn-danger hidden" onclick="deleteHoliday()">Excluir</button>
       <button class="btn btn-secondary" onclick="closeHolidayModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveHoliday()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="bulk-edit-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:480px">
+    <h2>✏️ Editar em massa</h2>
+    <p style="color:var(--muted);font-size:13px;margin-top:-8px">Alterando <strong id="bulk-edit-count">0</strong> atividade(s). Preencha apenas os campos que deseja modificar — os campos em branco ficam como estão.</p>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="bulk-status">
+        <option value="">— Não alterar —</option>
+        <option>Não iniciada</option><option>Em progresso</option><option>Atrasada</option><option>Concluída</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Prioridade</label>
+      <select id="bulk-prioridade">
+        <option value="">— Não alterar —</option>
+        <option>Baixa</option><option>Média</option><option>Importante</option><option>Urgente</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Prazo</label>
+      <input type="date" id="bulk-prazo">
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">Deixe em branco para não alterar.</div>
+    </div>
+    <div class="form-group">
+      <label>Responsável</label>
+      <select id="bulk-responsavel"></select>
+    </div>
+    <div class="form-group">
+      <label>Modo do responsável</label>
+      <select id="bulk-resp-mode">
+        <option value="replace">Substituir os responsáveis atuais pelo novo</option>
+        <option value="add">Adicionar o novo aos responsáveis já existentes</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeBulkEditModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitBulkEdit()">Aplicar alterações</button>
     </div>
   </div>
 </div>
@@ -1660,6 +1716,7 @@ function saveReunioes(r){ _lastLocalSave[LS_REUNIOES] = Date.now(); saveLS(LS_RE
 let currentUser = null, currentArea = null;
 let chartSetor=null, chartStatus=null, chartStack=null, chartPessoas=null;
 let pwdMode = "login", pwdTargetUserId = null;
+let _selectedTaskIds = new Set();
 
 async function hashPwd(pwd){
   const enc = new TextEncoder().encode(pwd + "_jt_salt_2026");
@@ -4203,14 +4260,21 @@ function renderTasks(){
   if(fst) tasks = tasks.filter(function(t){return t.status===fst;});
   const fp = (document.getElementById("filter-prioridade")||{}).value||"";
   if(fp) tasks = tasks.filter(function(t){return (t.prioridade||"Média")===fp;});
+  const fPer = (document.getElementById("filter-periodicidade")||{}).value||"";
+  if(fPer) tasks = tasks.filter(function(t){return (t.periodicidade||"Avulsa")===fPer;});
+  const fResp = (document.getElementById("filter-responsavel")||{}).value||"";
+  if(fResp) tasks = tasks.filter(function(t){return getResponsaveis(t).indexOf(fResp)>=0;});
   const fT = (document.getElementById("filter-tag")||{}).value||"";
   if(fT) tasks = tasks.filter(function(t){return (t.tags||[]).indexOf(fT)>=0;});
   populateTagFilter();
+  populateRespFilter();
   if(fq) tasks = tasks.filter(function(t){return (t.titulo+" "+(t.descricao||"")+" "+getResponsaveis(t).join(" ")).toLowerCase().includes(fq);});
   renderQuickStats(tasks);
   const tbody = document.getElementById("tasks-body");
   if(tasks.length===0){
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma atividade encontrada.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma atividade encontrada.</td></tr>';
+    _selectedTaskIds = new Set();
+    updateBulkActionsBar();
     return;
   }
   const prioOrder = {"Urgente":0,"Importante":1,"Média":2,"Baixa":3};
@@ -4245,7 +4309,9 @@ function renderTasks(){
     const prioTag = '<span class="priority-tag '+prioKey+'">'+prio+'</span>';
     const histTxt = (t.historico&&t.historico.length>0)? '<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Última conclusão: '+formatDate(t.historico[t.historico.length-1].data)+'</div>' : "";
     const tagsHtml = (t.tags&&t.tags.length>0)? '<div style="margin-top:4px">'+t.tags.map(function(tg){return '<span class="tag-chip">🏷 '+esc(tg)+'</span>';}).join("")+'</div>' : "";
+    const checked = _selectedTaskIds.has(t.id) ? "checked" : "";
     return '<tr>'+
+      '<td><input type="checkbox" class="task-row-chk" data-task-id="'+t.id+'" '+checked+' onclick="toggleTaskSelection(\''+t.id+'\', this.checked)"></td>'+
       '<td><div style="font-weight:700" class="task-row-title" onclick="viewTask(\''+t.id+'\')">'+esc(t.titulo)+'</div>'+'<div style="margin-top:4px">'+prioTag+periodTag+'</div>'+(t.descricao?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(t.descricao)+'</div>':"")+tagsHtml+histTxt+'</td>'+
       '<td><span class="area-tag">'+esc(t.area)+'</span><br><span style="font-size:13px">'+esc(t.setor)+'</span></td>'+
       (function(){
@@ -4261,6 +4327,7 @@ function renderTasks(){
       (canDelete(t)?'<button class="btn btn-danger btn-sm" onclick="deleteTask(\''+t.id+'\')">🗑️</button>':"")+'</td>'+
     '</tr>';
   }).join("");
+  updateBulkActionsBar();
 }
 
 function canDelete(t){
@@ -4269,6 +4336,145 @@ function canDelete(t){
   if(currentUser.papel==="funcionario" && getResponsaveis(t).indexOf(currentUser.nome)>=0) return true;
   return false;
 }
+
+/* ============ SELEÇÃO E AÇÕES EM MASSA ============ */
+function populateRespFilter(){
+  const sel = document.getElementById("filter-responsavel");
+  if(!sel) return;
+  const current = sel.value;
+  const users = loadUsers().filter(function(u){return u.papel!=="cfo";}).map(function(u){return u.nome;});
+  const tasks = visibleTasks();
+  const tasksResp = new Set();
+  tasks.forEach(function(t){ getResponsaveis(t).forEach(function(n){ tasksResp.add(n); }); });
+  const all = Array.from(new Set(users.concat(Array.from(tasksResp)))).sort(function(a,b){return a.localeCompare(b);});
+  sel.innerHTML = '<option value="">Todos os responsáveis</option>' + all.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("");
+  if(current && all.indexOf(current)>=0) sel.value = current;
+}
+function toggleTaskSelection(id, checked){
+  if(checked) _selectedTaskIds.add(id);
+  else _selectedTaskIds.delete(id);
+  updateBulkActionsBar(); syncSelectAllChk();
+}
+function toggleAllTasksSelection(checked){
+  document.querySelectorAll(".task-row-chk").forEach(function(cb){
+    cb.checked = checked;
+    const id = cb.getAttribute("data-task-id");
+    if(checked) _selectedTaskIds.add(id); else _selectedTaskIds.delete(id);
+  });
+  updateBulkActionsBar();
+}
+function syncSelectAllChk(){
+  const all = document.querySelectorAll(".task-row-chk");
+  const checkedNodes = document.querySelectorAll(".task-row-chk:checked");
+  const selAll = document.getElementById("select-all-tasks");
+  if(!selAll) return;
+  if(all.length === 0){ selAll.checked = false; selAll.indeterminate = false; return; }
+  if(checkedNodes.length === 0){ selAll.checked = false; selAll.indeterminate = false; }
+  else if(checkedNodes.length === all.length){ selAll.checked = true; selAll.indeterminate = false; }
+  else { selAll.checked = false; selAll.indeterminate = true; }
+}
+function clearTaskSelection(){
+  _selectedTaskIds = new Set();
+  document.querySelectorAll(".task-row-chk").forEach(function(cb){ cb.checked = false; });
+  const selAll = document.getElementById("select-all-tasks");
+  if(selAll){ selAll.checked = false; selAll.indeterminate = false; }
+  updateBulkActionsBar();
+}
+function updateBulkActionsBar(){
+  const bar = document.getElementById("bulk-actions-bar");
+  const count = document.getElementById("bulk-count");
+  if(!bar || !count) return;
+  const n = _selectedTaskIds.size;
+  if(n === 0){ bar.style.display = "none"; }
+  else { bar.style.display = "flex"; count.textContent = n + (n === 1 ? " atividade selecionada" : " atividades selecionadas"); }
+  syncSelectAllChk();
+}
+function bulkDeleteTasks(){
+  if(_selectedTaskIds.size === 0) return;
+  const ids = Array.from(_selectedTaskIds);
+  const tasks = loadTasks();
+  const allowed = ids.filter(function(id){
+    const t = tasks.find(function(x){return x.id===id;});
+    return t && canDelete(t);
+  });
+  const blocked = ids.length - allowed.length;
+  let msg = "Excluir " + allowed.length + " atividade" + (allowed.length>1?"s":"") + "?";
+  if(blocked > 0) msg += "\n\n(" + blocked + " atividade(s) selecionada(s) não podem ser excluídas pelo seu perfil e serão ignoradas.)";
+  if(!confirm(msg)) return;
+  const allowedSet = new Set(allowed);
+  const novas = tasks.filter(function(t){return !allowedSet.has(t.id);});
+  saveTasks(novas);
+  clearTaskSelection();
+  renderTasks();
+}
+function openBulkEditModal(){
+  if(_selectedTaskIds.size === 0) return;
+  const modal = document.getElementById("bulk-edit-modal");
+  if(!modal) return;
+  document.getElementById("bulk-status").value = "";
+  document.getElementById("bulk-prioridade").value = "";
+  document.getElementById("bulk-prazo").value = "";
+  const respSel = document.getElementById("bulk-responsavel");
+  const users = loadUsers().filter(function(u){return u.papel!=="cfo";}).map(function(u){return u.nome;}).sort(function(a,b){return a.localeCompare(b);});
+  respSel.innerHTML = '<option value="">— Não alterar —</option>' + users.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("");
+  document.getElementById("bulk-resp-mode").value = "replace";
+  document.getElementById("bulk-edit-count").textContent = _selectedTaskIds.size;
+  modal.classList.remove("hidden");
+}
+function closeBulkEditModal(){
+  const m = document.getElementById("bulk-edit-modal");
+  if(m) m.classList.add("hidden");
+}
+function submitBulkEdit(){
+  const status = document.getElementById("bulk-status").value;
+  const prioridade = document.getElementById("bulk-prioridade").value;
+  const prazo = document.getElementById("bulk-prazo").value;
+  const responsavel = document.getElementById("bulk-responsavel").value;
+  const respMode = document.getElementById("bulk-resp-mode").value;
+  if(!status && !prioridade && !prazo && !responsavel){ alert("Escolha pelo menos um campo para alterar."); return; }
+  const tasks = loadTasks();
+  const ids = Array.from(_selectedTaskIds);
+  const today = new Date().toISOString().slice(0,10);
+  let alteradas = 0;
+  ids.forEach(function(id){
+    const idx = tasks.findIndex(function(t){return t.id===id;});
+    if(idx < 0) return;
+    const t = tasks[idx];
+    const updated = Object.assign({}, t);
+    if(status){
+      if(t.status !== "Concluída" && status === "Concluída"){
+        updated.dataConclusao = today;
+        updated.historico = (t.historico||[]).concat([{data: today, por: currentUser.nome}]);
+        if(t.periodicidade && t.periodicidade !== "Avulsa"){
+          updated.prazo = nextPrazo(t.prazo||today, t.periodicidade);
+          updated.status = "Não iniciada";
+          delete updated.dataConclusao;
+        } else { updated.status = status; }
+      } else { updated.status = status; }
+    }
+    if(prioridade) updated.prioridade = prioridade;
+    if(prazo) updated.prazo = prazo;
+    if(responsavel){
+      if(respMode === "replace"){ updated.responsaveis = [responsavel]; }
+      else {
+        const atuais = getResponsaveis(t).slice();
+        if(atuais.indexOf(responsavel) < 0) atuais.push(responsavel);
+        updated.responsaveis = atuais;
+      }
+    }
+    updated.atualizado = new Date().toISOString();
+    tasks[idx] = updated;
+    alteradas++;
+  });
+  saveTasks(tasks);
+  closeBulkEditModal();
+  clearTaskSelection();
+  renderTasks();
+  if(!document.getElementById("view-dashboard").classList.contains("hidden")) renderDashboard();
+  if(!document.getElementById("view-agenda").classList.contains("hidden")) renderAgenda();
+  alert(alteradas + " atividade(s) atualizada(s).");
+}
+/* =================================================== */
 
 function renderQuickStats(tasks){
   const total = tasks.length;
@@ -5196,4 +5402,15 @@ init();
         <button class="btn btn-secondary" onclick="closeFbWizard()">Cancelar</button>
         <button class="btn btn-primary" onclick="submitFbConfig()">🔗 Conectar e migrar dados</button>
       </div>
- 
+     </div>
+    <div id="fb-wizard-syncing" class="hidden" style="text-align:center;padding:30px">
+      <div style="font-size:48px;margin-bottom:14px">☁️</div>
+      <h3 style="margin:0 0 8px">Sincronizando dados...</h3>
+      <p style="color:var(--muted);font-size:13.5px" id="fb-sync-msg">Aguarde, estamos enviando todos os dados para a nuvem.</p>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
