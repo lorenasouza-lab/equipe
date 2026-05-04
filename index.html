@@ -4986,8 +4986,19 @@ async function submitFbConfig(){
     let txt = raw;
     const m = txt.match(/=\s*(\{[\s\S]*\})/);
     if(m) txt = m[1];
-    txt = txt.replace(/(\w+)\s*:/g, '"$1":').replace(/\'/g, '"').replace(/,\s*\}/g,"}").replace(/;\s*$/,'');
-    cfg = JSON.parse(txt);
+    txt = txt.replace(/;\s*$/, '').trim();
+    // Tenta primeiro como objeto JS (formato do Firebase Console)
+    try {
+      cfg = (new Function('return (' + txt + ')'))();
+    } catch(eJs) {
+      // Fallback: normaliza e parseia como JSON, quoteando só as chaves
+      let json = txt
+        .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')
+        .replace(/'/g, '"')
+        .replace(/,(\s*[}\]])/g, '$1');
+      cfg = JSON.parse(json);
+    }
+    if(!cfg || typeof cfg !== "object") throw new Error("Não é um objeto");
   } catch(e){
     msg.className="pwd-msg error"; msg.textContent="Configuração inválida. Cole o objeto firebaseConfig completo do Console.";
     return;
