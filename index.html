@@ -3808,7 +3808,7 @@ function renderChatMessages(){
     const dStr = tm? tm.toLocaleDateString("pt-BR") : "";
     let textoHtml = esc(m.texto||"");
     // Se contém link Jitsi, transformar em botão
-    textoHtml = textoHtml.replace(/(https:\/\/meet\.jit\.si\/[^\s]+)/g, function(url){
+    textoHtml = textoHtml.replace(/(https:\/\/(?:meet\.jit\.si|meet\.google\.com)\/[^\s]+)/g, function(url){
       return '<br><a href="'+url+'" target="_blank" style="display:inline-block;background:#16a34a;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:700;font-size:12px;margin-top:4px">📞 Entrar na reunião</a>';
     });
     return '<div class="chat-msg'+(own?" own":"")+'">'+
@@ -3877,8 +3877,11 @@ function criarReuniaoChat(){
   if(!_currentRoom) return;
   const titulo = prompt("Título da reunião:");
   if(!titulo) return;
-  const meetId = "JustTravel-"+Math.random().toString(36).substring(2,10);
-  const link = "https://meet.jit.si/"+meetId;
+  let link = prompt("Cole o link do Google Meet (ou deixe em branco para criar uma nova sala ao clicar):", "");
+  if(link === null) return;
+  link = link.trim();
+  if(!link) link = "https://meet.google.com/new";
+  if(!/^https?:\/\//.test(link)) link = "https://" + link;
   const msg = {
     id: crypto.randomUUID(),
     roomId: _currentRoom,
@@ -3919,6 +3922,7 @@ function openReuniaoModal(dataDefault){
       '<div class="form-group"><label>Hora</label><input type="time" id="reu-hora" value="10:00"></div>'+
     '</div>'+
     '<div class="form-group"><label>Duração (minutos)</label><input type="number" id="reu-dur" value="30" min="15" step="15"></div>'+
+    '<div class="form-group"><label>Link do Google Meet <span style="color:var(--muted);font-weight:400;font-size:11px">(opcional — deixe em branco para criar nova sala ao clicar)</span></label><input type="text" id="reu-meetlink" placeholder="https://meet.google.com/abc-defg-hij"></div>'+
     '<div class="form-group"><label>Participantes</label><div id="reu-parts" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px"></div></div>'+
     '<div class="modal-actions">'+
       '<button id="reu-delete-btn" class="btn btn-danger hidden" onclick="deleteReuniao()">Excluir</button>'+
@@ -3947,7 +3951,9 @@ function saveReuniao(){
   const participantes = Array.prototype.map.call(checks, function(c){return c.value;});
   if(!participantes.includes(currentUser.id)) participantes.push(currentUser.id);
   const id = document.getElementById("reu-id").value;
-  const meetId = "JustTravel-"+Math.random().toString(36).substring(2,10);
+  let customLink = (document.getElementById("reu-meetlink")||{value:""}).value.trim();
+  if(customLink && !/^https?:\/\//.test(customLink)) customLink = "https://" + customLink;
+  const defaultLink = "https://meet.google.com/new";
   const reuniao = {
     id: id || crypto.randomUUID(),
     titulo: titulo,
@@ -3956,7 +3962,7 @@ function saveReuniao(){
     hora: hora,
     duracao: dur,
     participantes: participantes,
-    meetLink: id? loadReunioes().find(function(r){return r.id===id;}).meetLink : "https://meet.jit.si/"+meetId,
+    meetLink: customLink || (id ? (loadReunioes().find(function(r){return r.id===id;}) || {}).meetLink || defaultLink : defaultLink),
     criadoPor: currentUser.id,
     criadoPorNome: currentUser.nome,
     criado: new Date().toISOString()
