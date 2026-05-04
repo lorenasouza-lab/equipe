@@ -1082,6 +1082,8 @@ tbody tr:hover{background:#f8fafc}
             <option value="">Todas as tags</option>
           </select>
           <input type="text" id="filter-search" placeholder="🔎 Buscar..." oninput="renderTasks()">
+          <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)">📅 Prazo de<input type="date" id="filter-data-de" onchange="renderTasks()" style="padding:4px 6px;font-size:12px"> até<input type="date" id="filter-data-ate" onchange="renderTasks()" style="padding:4px 6px;font-size:12px"></span>
+          <button class="btn btn-secondary btn-sm" onclick="limparFiltrosData()" style="font-size:11px" title="Limpar datas">✕ Datas</button>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Exportar CSV</button>
@@ -4266,6 +4268,10 @@ function renderTasks(){
   if(fResp) tasks = tasks.filter(function(t){return getResponsaveis(t).indexOf(fResp)>=0;});
   const fT = (document.getElementById("filter-tag")||{}).value||"";
   if(fT) tasks = tasks.filter(function(t){return (t.tags||[]).indexOf(fT)>=0;});
+  const fDde = (document.getElementById("filter-data-de")||{}).value||"";
+  const fDate = (document.getElementById("filter-data-ate")||{}).value||"";
+  if(fDde) tasks = tasks.filter(function(t){return t.prazo && t.prazo >= fDde;});
+  if(fDate) tasks = tasks.filter(function(t){return t.prazo && t.prazo <= fDate;});
   populateTagFilter();
   populateRespFilter();
   if(fq) tasks = tasks.filter(function(t){return (t.titulo+" "+(t.descricao||"")+" "+getResponsaveis(t).join(" ")).toLowerCase().includes(fq);});
@@ -4335,6 +4341,14 @@ function canDelete(t){
   if(currentUser.papel==="coordenador" && t.area===currentUser.area) return true;
   if(currentUser.papel==="funcionario" && getResponsaveis(t).indexOf(currentUser.nome)>=0) return true;
   return false;
+}
+
+function limparFiltrosData(){
+  const de = document.getElementById("filter-data-de");
+  const ate = document.getElementById("filter-data-ate");
+  if(de) de.value = "";
+  if(ate) ate.value = "";
+  renderTasks();
 }
 
 /* ============ SELEÇÃO E AÇÕES EM MASSA ============ */
