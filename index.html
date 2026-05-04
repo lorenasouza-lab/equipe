@@ -1082,8 +1082,14 @@ tbody tr:hover{background:#f8fafc}
             <option value="">Todas as tags</option>
           </select>
           <input type="text" id="filter-search" placeholder="🔎 Buscar..." oninput="renderTasks()">
-          <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)">📅 Prazo de<input type="date" id="filter-data-de" onchange="renderTasks()" style="padding:4px 6px;font-size:12px"> até<input type="date" id="filter-data-ate" onchange="renderTasks()" style="padding:4px 6px;font-size:12px"></span>
-          <button class="btn btn-secondary btn-sm" onclick="limparFiltrosData()" style="font-size:11px" title="Limpar datas">✕ Datas</button>
+          <select id="filter-periodo" onchange="onFilterPeriodoChange()">
+            <option value="">📅 Todos os períodos</option>
+            <option value="hoje">📅 Hoje</option>
+            <option value="semana">📆 Essa semana</option>
+            <option value="atrasado">⚠️ Atrasado</option>
+            <option value="personalizado">🗓 Personalizado</option>
+          </select>
+          <span id="filter-data-custom" style="display:none;align-items:center;gap:4px;font-size:12px;color:var(--muted)">de<input type="date" id="filter-data-de" onchange="renderTasks()" style="padding:4px 6px;font-size:12px"> até<input type="date" id="filter-data-ate" onchange="renderTasks()" style="padding:4px 6px;font-size:12px"></span>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Exportar CSV</button>
@@ -4274,10 +4280,27 @@ function renderTasks(){
   if(fResp) tasks = tasks.filter(function(t){return getResponsaveis(t).indexOf(fResp)>=0;});
   const fT = (document.getElementById("filter-tag")||{}).value||"";
   if(fT) tasks = tasks.filter(function(t){return (t.tags||[]).indexOf(fT)>=0;});
-  const fDde = (document.getElementById("filter-data-de")||{}).value||"";
-  const fDate = (document.getElementById("filter-data-ate")||{}).value||"";
-  if(fDde) tasks = tasks.filter(function(t){return t.prazo && t.prazo >= fDde;});
-  if(fDate) tasks = tasks.filter(function(t){return t.prazo && t.prazo <= fDate;});
+  const fPeriodo = (document.getElementById("filter-periodo")||{}).value||"";
+  const todayStr = new Date().toISOString().slice(0,10);
+  if(fPeriodo === "hoje"){
+    tasks = tasks.filter(function(t){return t.prazo === todayStr;});
+  } else if(fPeriodo === "semana"){
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const dow = hoje.getDay();
+    const diffSeg = dow === 0 ? -6 : 1 - dow;
+    const seg = new Date(hoje); seg.setDate(hoje.getDate() + diffSeg);
+    const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+    const segStr = seg.toISOString().slice(0,10);
+    const domStr = dom.toISOString().slice(0,10);
+    tasks = tasks.filter(function(t){return t.prazo && t.prazo >= segStr && t.prazo <= domStr;});
+  } else if(fPeriodo === "atrasado"){
+    tasks = tasks.filter(function(t){return t.prazo && t.prazo < todayStr && t.status !== "Concluída";});
+  } else if(fPeriodo === "personalizado"){
+    const fDde = (document.getElementById("filter-data-de")||{}).value||"";
+    const fDate = (document.getElementById("filter-data-ate")||{}).value||"";
+    if(fDde) tasks = tasks.filter(function(t){return t.prazo && t.prazo >= fDde;});
+    if(fDate) tasks = tasks.filter(function(t){return t.prazo && t.prazo <= fDate;});
+  }
   populateTagFilter();
   populateRespFilter();
   if(fq) tasks = tasks.filter(function(t){return (t.titulo+" "+(t.descricao||"")+" "+getResponsaveis(t).join(" ")).toLowerCase().includes(fq);});
@@ -4349,11 +4372,19 @@ function canDelete(t){
   return false;
 }
 
-function limparFiltrosData(){
-  const de = document.getElementById("filter-data-de");
-  const ate = document.getElementById("filter-data-ate");
-  if(de) de.value = "";
-  if(ate) ate.value = "";
+function onFilterPeriodoChange(){
+  const sel = document.getElementById("filter-periodo");
+  const wrap = document.getElementById("filter-data-custom");
+  if(!sel || !wrap) return;
+  if(sel.value === "personalizado"){
+    wrap.style.display = "inline-flex";
+  } else {
+    wrap.style.display = "none";
+    const de = document.getElementById("filter-data-de");
+    const ate = document.getElementById("filter-data-ate");
+    if(de) de.value = "";
+    if(ate) ate.value = "";
+  }
   renderTasks();
 }
 
